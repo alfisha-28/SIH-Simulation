@@ -12,8 +12,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def init_db():
+    import app.models  # Ensure models are imported so metadata is populated
     Base.metadata.create_all(bind=engine)
+
 
 def get_db():
     db = SessionLocal()
