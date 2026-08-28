@@ -3,9 +3,10 @@ from app.db import engine, Base, SessionLocal
 from app.models import Event, TrajectoryPoint, WeatherField, Risk
 
 
-def seed_database():
-    print("Dropping existing database tables...")
-    Base.metadata.drop_all(bind=engine)
+def seed_database(reset=True):
+    if reset:
+        print("Dropping existing database tables...")
+        Base.metadata.drop_all(bind=engine)
 
     print("Creating database schema...")
     Base.metadata.create_all(bind=engine)
@@ -449,6 +450,19 @@ def seed_database():
         db.rollback()
         print(f"Error seeding database: {e}")
         raise e
+    finally:
+        db.close()
+
+
+def seed_if_empty():
+    db = SessionLocal()
+    try:
+        count = db.query(Event).count()
+        if count == 0:
+            print("Database is empty. Populating seed dataset...")
+            seed_database(reset=False)
+    except Exception as e:
+        print(f"Error checking DB seed status: {e}")
     finally:
         db.close()
 
