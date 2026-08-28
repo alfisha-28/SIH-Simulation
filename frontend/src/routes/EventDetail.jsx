@@ -14,6 +14,13 @@ export default function EventDetail() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
+  // Sync eventId to localStorage when successfully mounted
+  useEffect(() => {
+    if (eventId) {
+      localStorage.setItem('lastActiveEventId', eventId);
+    }
+  }, [eventId]);
+
   useEffect(() => {
     async function loadData() {
       setLoading(true);
@@ -87,18 +94,18 @@ export default function EventDetail() {
   if (notFound) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-6 text-center">
-        <div className="p-12 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-2xl">
-          <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center mx-auto text-xl font-bold font-mono">
+        <div className="p-12 bg-white border border-[#D9E4EE] rounded-2xl space-y-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
             404
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Event Not Found</h1>
-          <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
-            The requested event identifier <span className="text-cyan-400 font-bold">{eventId}</span> does not exist in the active intelligence database.
+          <h1 className="text-2xl font-bold text-slate-900">Event Not Found</h1>
+          <p className="text-xs font-mono text-slate-500 max-w-md mx-auto">
+            The requested event identifier <span className="text-blue-600 font-bold">{eventId}</span> does not exist in the active intelligence database.
           </p>
           <div className="pt-2">
             <Link
               to="/events"
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
             >
               ← Return to Events Explorer
             </Link>
@@ -112,10 +119,10 @@ export default function EventDetail() {
   if (loading) {
     return (
       <div className="p-8 max-w-6xl mx-auto space-y-6">
-        <div className="h-28 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
+        <div className="h-28 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-64 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
-          <div className="h-64 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
+          <div className="h-64 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
+          <div className="h-64 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
         </div>
       </div>
     );
@@ -125,10 +132,10 @@ export default function EventDetail() {
   if (error || !eventDetail) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-950/60 border border-red-800 rounded-xl text-red-200 text-xs font-mono">
+        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
           {error || 'Failed to load event details.'}
         </div>
-        <Link to="/events" className="text-xs text-cyan-400 hover:underline">
+        <Link to="/events" className="text-xs text-blue-600 hover:underline">
           ← Back to Events
         </Link>
       </div>
@@ -136,30 +143,30 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-slate-800">
       {/* Top Breadcrumb */}
       <div>
         <Link
           to="/events"
-          className="text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1"
+          className="text-xs font-mono text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center gap-1"
         >
           ← Back to Events Explorer
         </Link>
       </div>
 
       {/* Main Header Banner */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 shadow-2xl backdrop-blur space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-mono text-cyan-400 font-bold px-2 py-0.5 bg-cyan-950/80 border border-cyan-800/60 rounded">
+              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
                 {eventDetail.event_id}
               </span>
-              <span className="text-xs text-slate-400 font-mono capitalize">
-                Status: <strong className="text-emerald-400">{eventDetail.status}</strong>
+              <span className="text-xs text-slate-500 font-mono capitalize">
+                Status: <strong className="text-emerald-700">{eventDetail.status}</strong>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-100 uppercase tracking-wide">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
               {formatEventType(eventDetail.type)} — {eventDetail.location_name}
             </h1>
           </div>
@@ -167,7 +174,7 @@ export default function EventDetail() {
           {/* Badges Stack */}
           <div className="flex items-center space-x-3">
             <SeverityBadge severity={eventDetail.severity} className="text-sm px-3 py-1" />
-            <div className="px-3 py-1 bg-cyan-950/80 border border-cyan-800/60 rounded-md font-mono text-xs text-cyan-300 font-bold">
+            <div className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md font-mono text-xs text-blue-700 font-bold">
               {Math.round(eventDetail.probability * 100)}% Probability
             </div>
             <ConfidenceBadge confidence={eventDetail.confidence} className="text-sm px-3 py-1" />
@@ -177,24 +184,24 @@ export default function EventDetail() {
         {/* Lead time & Detection metadata strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono pt-1">
           <div>
-            <span className="text-slate-500 block uppercase text-[10px]">Forecast Lead Time</span>
-            <span className="text-slate-200 font-bold">{eventDetail.forecast_lead_time_hours} Hours</span>
+            <span className="text-slate-400 block uppercase text-[10px]">Forecast Lead Time</span>
+            <span className="text-slate-800 font-bold">{eventDetail.forecast_lead_time_hours} Hours</span>
           </div>
           <div>
-            <span className="text-slate-500 block uppercase text-[10px]">Detected At</span>
-            <span className="text-slate-200 font-bold">
+            <span className="text-slate-400 block uppercase text-[10px]">Detected At</span>
+            <span className="text-slate-800 font-bold">
               {new Date(eventDetail.detected_at).toUTCString().replace(' GMT', '')}
             </span>
           </div>
           <div>
-            <span className="text-slate-500 block uppercase text-[10px]">Movement Vector</span>
-            <span className="text-amber-300 font-bold">
+            <span className="text-slate-400 block uppercase text-[10px]">Movement Vector</span>
+            <span className="text-amber-700 font-bold">
               {eventDetail.movement_direction} @ {eventDetail.movement_speed_kmh} km/h
             </span>
           </div>
           <div>
-            <span className="text-slate-500 block uppercase text-[10px]">Ensemble Consensus</span>
-            <span className="text-purple-300 font-bold">
+            <span className="text-slate-400 block uppercase text-[10px]">Ensemble Consensus</span>
+            <span className="text-indigo-700 font-bold">
               {Math.round(eventDetail.ensemble_agreement * 100)}% Agreement
             </span>
           </div>
@@ -204,13 +211,13 @@ export default function EventDetail() {
       {/* Grid Layout: Detection Explanation & Tracking */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Detection Explanation Box */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 shadow-xl backdrop-blur space-y-5">
-          <div className="border-b border-slate-800 pb-3">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-100 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+        <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-5">
+          <div className="border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
               Detection Explanation — Why Flagged?
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Extreme Forecast Index (EFI) anomaly breakdown against 20-year climatological normal.
             </p>
           </div>
@@ -218,40 +225,40 @@ export default function EventDetail() {
           {/* EFI Comparison Bars */}
           <div className="space-y-4">
             {/* Rainfall EFI */}
-            <div className="space-y-1.5 p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <div className="space-y-1.5 p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300 font-semibold flex items-center gap-2">
+                <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Rainfall Anomaly (EFI)
                   {primaryAnomaly?.key === 'rainfall' && (
-                    <span className="px-1.5 py-0.5 bg-red-950/80 border border-red-500/50 text-red-400 text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-blue-400 font-bold font-mono">{eventDetail.rainfall_efi.toFixed(2)}</span>
+                <span className="text-blue-600 font-bold font-mono">{eventDetail.rainfall_efi.toFixed(2)}</span>
               </div>
-              <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${eventDetail.rainfall_efi * 100}%` }}
                 ></div>
               </div>
             </div>
 
             {/* Temperature EFI */}
-            <div className="space-y-1.5 p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <div className="space-y-1.5 p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300 font-semibold flex items-center gap-2">
+                <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Temperature Anomaly (EFI)
                   {primaryAnomaly?.key === 'temperature' && (
-                    <span className="px-1.5 py-0.5 bg-red-950/80 border border-red-500/50 text-red-400 text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-red-400 font-bold font-mono">{eventDetail.temperature_efi.toFixed(2)}</span>
+                <span className="text-red-600 font-bold font-mono">{eventDetail.temperature_efi.toFixed(2)}</span>
               </div>
-              <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-red-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${eventDetail.temperature_efi * 100}%` }}
@@ -260,19 +267,19 @@ export default function EventDetail() {
             </div>
 
             {/* Wind EFI */}
-            <div className="space-y-1.5 p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <div className="space-y-1.5 p-3 bg-slate-50 border border-slate-100 rounded-lg">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300 font-semibold flex items-center gap-2">
+                <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Wind Speed Anomaly (EFI)
                   {primaryAnomaly?.key === 'wind' && (
-                    <span className="px-1.5 py-0.5 bg-red-950/80 border border-red-500/50 text-red-400 text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-amber-400 font-bold font-mono">{eventDetail.wind_efi.toFixed(2)}</span>
+                <span className="text-amber-700 font-bold font-mono">{eventDetail.wind_efi.toFixed(2)}</span>
               </div>
-              <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-amber-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${eventDetail.wind_efi * 100}%` }}
@@ -282,46 +289,46 @@ export default function EventDetail() {
           </div>
 
           {/* Primary Anomaly Narrative Callout */}
-          <div className="p-4 bg-cyan-950/40 border border-cyan-800/50 rounded-xl space-y-2">
-            <div className="flex items-center space-x-2 text-xs font-bold text-cyan-300 uppercase tracking-wide">
-              <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
+            <div className="flex items-center space-x-2 text-xs font-bold text-blue-700 uppercase tracking-wide">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Detection Narrative Summary</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              System flagged this event due to a dominant <strong className="text-cyan-200">{primaryAnomaly?.name}</strong> of{' '}
-              <strong className="text-cyan-300 font-mono">{primaryAnomaly?.value}</strong>. Multi-model ensemble agreement is at{' '}
-              <strong className="text-purple-300 font-mono">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, confirming high confidence in atmospheric instability over {eventDetail.location_name}.
+            <p className="text-xs text-slate-700 leading-relaxed font-sans">
+              System flagged this event due to a dominant <strong className="text-blue-800">{primaryAnomaly?.name}</strong> of{' '}
+              <strong className="text-blue-700 font-mono">{primaryAnomaly?.value}</strong>. Multi-model ensemble agreement is at{' '}
+              <strong className="text-indigo-700 font-mono">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, confirming high confidence in atmospheric instability over {eventDetail.location_name}.
             </p>
           </div>
         </div>
 
         {/* Tracking & Trajectory Map Box */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 shadow-xl backdrop-blur space-y-4 flex flex-col justify-between">
+        <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="border-b border-slate-800 pb-3">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-100 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <div className="border-b border-slate-100 pb-3">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                 Tracking & Propagation Dynamics
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Spatial footprint and forecasted path across timesteps.
               </p>
             </div>
 
             {/* Tracking Metrics Grid */}
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-                <span className="text-slate-500 uppercase text-[10px] block">Current Centroid</span>
-                <span className="text-slate-200 font-bold">
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                <span className="text-slate-400 uppercase text-[10px] block">Current Centroid</span>
+                <span className="text-slate-800 font-bold">
                   {typeof eventDetail?.centroid_lat === 'number' ? eventDetail.centroid_lat.toFixed(2) : 'N/A'}°N,{' '}
                   {typeof eventDetail?.centroid_lon === 'number' ? eventDetail.centroid_lon.toFixed(2) : 'N/A'}°E
                 </span>
               </div>
-              <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-                <span className="text-slate-500 uppercase text-[10px] block">Expected Peak</span>
-                <span className="text-cyan-300 font-bold">
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                <span className="text-slate-400 uppercase text-[10px] block">Expected Peak</span>
+                <span className="text-blue-600 font-bold">
                   {peakTimestep ? `${peakTimestep.timestep_label} (${peakTimestep.timestep_hours_offset}h)` : 'NOW'}
                 </span>
               </div>
@@ -340,25 +347,25 @@ export default function EventDetail() {
       </div>
 
       {/* Impact Summary & CTAs Section */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 shadow-2xl backdrop-blur space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-100 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
               Impact Summary & Downstream Intelligence
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Assessed primary threat: <span className="text-slate-200 font-bold">{getImpactLabel(eventDetail.type)}</span>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Assessed primary threat: <span className="text-slate-800 font-bold">{getImpactLabel(eventDetail.type)}</span>
             </p>
           </div>
 
           {eventRisk && (
             <div className="flex items-center space-x-3 text-xs font-mono">
-              <span className="text-slate-400">Current Risk Snapshot:</span>
-              <span className="px-3 py-1 bg-red-950/80 border border-red-500/50 text-red-400 rounded-md font-bold uppercase">
+              <span className="text-slate-500">Current Risk Snapshot:</span>
+              <span className="px-3 py-1 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] rounded-md font-bold uppercase">
                 {eventRisk.overall_risk} Risk
               </span>
-              <span className="text-slate-400">({eventRisk.impact_region_name})</span>
+              <span className="text-slate-500">({eventRisk.impact_region_name})</span>
             </div>
           )}
         </div>
@@ -367,7 +374,7 @@ export default function EventDetail() {
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Link
             to={`/events/${eventDetail.event_id}/forecast`}
-            className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-cyan-600/30 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-blue-600/30 flex items-center gap-2"
           >
             <span>View Localized Forecast</span>
             <span>→</span>
@@ -375,7 +382,7 @@ export default function EventDetail() {
 
           <Link
             to={`/events/${eventDetail.event_id}/risk`}
-            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-350 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
             <span>View Risk Details</span>
             <span>→</span>

@@ -1,25 +1,56 @@
-import { NavLink } from 'react-router-dom';
-
-const navItems = [
-  { path: '/', label: 'Overview', end: true },
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/events', label: 'Events Explorer', end: true },
-  { path: '/events/EVT-2026-001', label: 'Event Detail' },
-  { path: '/events/EVT-2026-001/forecast', label: 'Event Forecast' },
-  { path: '/events/EVT-2026-001/risk', label: 'Event Risk' },
-  { path: '/alerts', label: 'Alerts' },
-  { path: '/system', label: 'System Info' },
-];
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { apiGet } from '../../lib/api';
 
 export default function Navbar() {
+  const location = useLocation();
+  const match = location.pathname.match(/\/events\/([^/]+)/);
+  const pathEventId = match ? match[1] : null;
+
+  const [events, setEvents] = useState([]);
+  useEffect(() => {
+    apiGet('/events')
+      .then((res) => {
+        if (res?.events) {
+          setEvents(res.events);
+        }
+      })
+      .catch((err) => console.error('Navbar error fetching alerts:', err));
+  }, []);
+
+  // Store the active event ID in localStorage when visited via URL
+  useEffect(() => {
+    if (pathEventId) {
+      localStorage.setItem('lastActiveEventId', pathEventId);
+    }
+  }, [pathEventId]);
+
+  const currentEventId = pathEventId || localStorage.getItem('lastActiveEventId') || events[0]?.event_id || 'EVT-2026-001';
+  const severeAlertsCount = events.filter((e) => e.severity?.toLowerCase() === 'severe').length;
+
+  const navItems = [
+    { path: '/', label: 'Overview', end: true },
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/events', label: 'Events Explorer', end: true },
+    { path: `/events/${currentEventId}`, label: 'Event Detail', end: true },
+    { path: `/events/${currentEventId}/forecast`, label: 'Event Forecast', end: true },
+    { path: `/events/${currentEventId}/risk`, label: 'Event Risk', end: true },
+    { 
+      path: '/alerts', 
+      label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}] 🔴` : 'Alerts',
+      hasAlert: severeAlertsCount > 0
+    },
+    { path: '/system', label: 'System Info' },
+  ];
+
   return (
-    <header className="border-b border-slate-800 bg-slate-950/80 sticky top-0 z-50 backdrop-blur">
+    <header className="border-b border-[#D9E4EE] bg-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 rounded-sm bg-blue-500 shadow-sm shadow-blue-500/50"></div>
-            <span className="font-bold tracking-wider text-slate-100 uppercase text-xs">
-              Weather Intel CC
+          <div className="flex items-center space-x-2">
+            <img src="/logo.jpg" alt="WARSHA Logo" className="h-7 w-auto object-contain rounded-md shadow-sm" />
+            <span className="font-extrabold tracking-wider text-slate-900 uppercase text-xs">
+              WARSHA
             </span>
           </div>
 
@@ -29,13 +60,20 @@ export default function Navbar() {
                 key={item.path}
                 to={item.path}
                 end={item.end}
-                className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                className={({ isActive }) => {
+                  let activeClass = 'bg-blue-50 text-blue-600 border border-blue-200';
+                  if (item.hasAlert && isActive) {
+                    activeClass = 'bg-red-50 text-red-600 border border-red-200';
+                  }
+                  
+                  return `px-3 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`
-                }
+                      ? activeClass
+                      : item.hasAlert 
+                        ? 'text-red-600 hover:text-red-800 hover:bg-red-50/50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`;
+                }}
               >
                 {item.label}
               </NavLink>

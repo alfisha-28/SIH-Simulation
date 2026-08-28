@@ -2,26 +2,47 @@ export default function SeverityBadge({ severity, className = '' }) {
   const getStyle = (sev) => {
     switch (sev?.toLowerCase()) {
       case 'severe':
-        return 'bg-red-500/20 text-red-400 border-red-500/40 shadow-red-950/20';
       case 'high':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/40 shadow-orange-950/20';
+      case 'critical':
+      case 'alert':
+        return 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
       case 'moderate':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-amber-950/20';
+      case 'warning':
+        return 'bg-[#FEF3C7] text-[#D97706] border-[#FDE047]';
       case 'low':
-        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-emerald-950/20';
+      case 'safe':
+        return 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-[#DBEAFE] text-[#2563EB] border-[#93C5FD]';
+    }
+  };
+
+  const getIcon = (sev) => {
+    switch (sev?.toLowerCase()) {
+      case 'severe':
+      case 'high':
+      case 'critical':
+      case 'alert':
+        return '🔴';
+      case 'moderate':
+      case 'warning':
+        return '🟡';
+      case 'low':
+      case 'safe':
+        return '🟢';
+      default:
+        return '🔵';
     }
   };
 
   return (
     <span
-      className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide border font-mono ${getStyle(
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide border font-mono ${getStyle(
         severity
       )} ${className}`}
     >
-      {severity || 'UNKNOWN'}
+      <span>{getIcon(severity)}</span>
+      <span>{severity || 'UNKNOWN'}</span>
     </span>
   );
 }
-

@@ -20,7 +20,7 @@ export default function TimelineSlider({
 
   if (!timeline || timeline.length === 0) {
     return (
-      <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 text-xs text-center font-mono">
+      <div className="p-4 bg-white border border-[#D9E4EE] rounded-xl text-slate-500 text-xs text-center font-mono shadow-sm">
         No forecast timeline available.
       </div>
     );
@@ -31,27 +31,27 @@ export default function TimelineSlider({
   const getRiskBadgeColor = (risk) => {
     switch (risk?.toLowerCase()) {
       case 'severe':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'high':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        return 'bg-orange-50 text-orange-700 border-orange-200';
       case 'moderate':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       default:
-        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4 shadow-xl backdrop-blur">
+    <div className="bg-white border border-[#D9E4EE] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
       {/* Header controls & Current Timestep Info */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               isPlaying
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30'
-                : 'bg-cyan-600 text-white hover:bg-cyan-500 shadow-md shadow-cyan-600/30'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100/80'
+                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm shadow-blue-600/10'
             }`}
           >
             {isPlaying ? (
@@ -71,7 +71,7 @@ export default function TimelineSlider({
             )}
           </button>
 
-          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+          <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
             {title}
           </span>
         </div>
@@ -79,11 +79,11 @@ export default function TimelineSlider({
         {/* Selected Timestep Details */}
         {currentStep && (
           <div className="flex items-center space-x-2 text-xs font-mono">
-            <span className="text-slate-400">Timestep:</span>
-            <span className="text-cyan-400 font-bold px-2 py-0.5 bg-cyan-950/80 border border-cyan-800/60 rounded">
+            <span className="text-slate-500">Timestep:</span>
+            <span className="text-blue-700 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
               {currentStep.timestep_label}
             </span>
-            <span className="text-slate-400">({currentStep.timestep_hours_offset}h)</span>
+            <span className="text-slate-500">({currentStep.timestep_hours_offset}h)</span>
             {currentStep.risk_level && (
               <span
                 className={`px-2 py-0.5 border rounded uppercase font-bold text-[10px] ${getRiskBadgeColor(
@@ -105,7 +105,7 @@ export default function TimelineSlider({
           max={timeline.length - 1}
           value={selectedIndex}
           onChange={(e) => onSelectIndex(Number(e.target.value))}
-          className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 hover:accent-cyan-300 focus:outline-none"
+          className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-500 focus:outline-none"
         />
 
         {/* Step Marker Labels Grid */}
@@ -116,10 +116,10 @@ export default function TimelineSlider({
               <button
                 key={step.timestep_label || idx}
                 onClick={() => onSelectIndex(idx)}
-                className={`flex flex-col items-center py-2 px-1 rounded-lg text-center transition-all ${
+                className={`flex flex-col items-center py-2 px-1 rounded-lg text-center transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 shadow-md scale-105'
-                    : 'bg-slate-950/40 border border-slate-800/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-blue-50 border border-blue-400 text-blue-700 shadow-sm scale-105 font-medium'
+                    : 'bg-white border border-[#D9E4EE] text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
                 <span className="font-bold text-xs font-mono">{step.timestep_label}</span>
@@ -127,7 +127,7 @@ export default function TimelineSlider({
                   {step.timestep_hours_offset === 0 ? 'Now' : `+${step.timestep_hours_offset}h`}
                 </span>
                 {step.probability !== undefined && (
-                  <span className="text-[10px] mt-1 font-mono text-cyan-400 font-semibold">
+                  <span className={`text-[10px] mt-1 font-mono font-semibold ${isSelected ? 'text-blue-700' : 'text-blue-600'}`}>
                     {Math.round(step.probability * 100)}%
                   </span>
                 )}

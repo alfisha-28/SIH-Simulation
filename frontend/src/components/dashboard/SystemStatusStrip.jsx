@@ -9,12 +9,12 @@ export default function SystemStatusStrip({
   const moderateCount = events.filter((e) => e.severity === 'moderate').length;
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-xl backdrop-blur flex flex-wrap items-center justify-between gap-4">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-slate-800">
       {/* Title & Live Status */}
       <div className="flex items-center space-x-3">
-        <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+        <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
           <svg
-            className="w-5 h-5 text-blue-400"
+            className="w-5 h-5 text-blue-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -28,11 +28,11 @@ export default function SystemStatusStrip({
           </svg>
         </div>
         <div>
-          <h1 className="text-base sm:text-lg font-extrabold tracking-wide text-white uppercase flex items-center gap-2">
-            Weather Intelligence Command Center
+          <h1 className="text-base sm:text-lg font-extrabold tracking-wide text-slate-900 uppercase flex items-center gap-2">
+            WARSHA Dashboard
           </h1>
-          <div className="flex items-center space-x-2 text-xs text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="flex items-center space-x-2 text-xs text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="font-mono text-[11px]">OPERATIONAL RADAR ACTIVE</span>
           </div>
         </div>
@@ -40,25 +40,25 @@ export default function SystemStatusStrip({
 
       {/* Metrics Counters Strip */}
       <div className="flex items-center space-x-4 text-xs font-mono">
-        <div className="px-3 py-1.5 bg-slate-950/70 border border-slate-800 rounded-lg space-y-0.5">
-          <span className="text-[10px] text-slate-500 uppercase block">Active Threats</span>
-          <span className="text-sm font-bold text-slate-200">{activeCount} Events</span>
+        <div className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg space-y-0.5">
+          <span className="text-[10px] text-blue-500 uppercase block font-bold">Active Threats</span>
+          <span className="text-sm font-bold text-blue-700">{activeCount} Events</span>
         </div>
 
-        <div className="px-3 py-1.5 bg-red-950/30 border border-red-900/50 rounded-lg space-y-0.5">
-          <span className="text-[10px] text-red-400 uppercase block font-semibold">Severe</span>
-          <span className="text-sm font-bold text-red-400">{severeCount} Critical</span>
+        <div className="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg space-y-0.5">
+          <span className="text-[10px] text-red-500 uppercase block font-bold">Severe</span>
+          <span className="text-sm font-bold text-red-700">{severeCount} Critical</span>
         </div>
 
-        <div className="px-3 py-1.5 bg-amber-950/30 border border-amber-900/50 rounded-lg space-y-0.5 hidden sm:block">
-          <span className="text-[10px] text-amber-400 uppercase block font-semibold">Moderate</span>
-          <span className="text-sm font-bold text-amber-400">{moderateCount} Events</span>
+        <div className="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg space-y-0.5 hidden sm:block">
+          <span className="text-[10px] text-yellow-600 uppercase block font-bold font-semibold">Moderate</span>
+          <span className="text-sm font-bold text-yellow-700">{moderateCount} Events</span>
         </div>
 
         {selectedEvent && (
-          <div className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-800/60 rounded-lg space-y-0.5 hidden md:block">
-            <span className="text-[10px] text-cyan-400 uppercase block font-semibold">Focused Threat</span>
-            <span className="text-sm font-bold text-cyan-300">
+          <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg space-y-0.5 hidden md:block">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Focused Threat</span>
+            <span className="text-sm font-bold text-slate-700">
               {selectedEvent.event_id} ({selectedEvent.location_name})
             </span>
           </div>
@@ -69,7 +69,7 @@ export default function SystemStatusStrip({
       <button
         onClick={onRefresh}
         disabled={loading}
-        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 rounded-lg text-xs font-mono flex items-center space-x-1.5 transition-colors border border-slate-700"
+        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 rounded-lg text-xs font-mono flex items-center space-x-1.5 transition-colors border border-slate-300"
       >
         <svg
           className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`}

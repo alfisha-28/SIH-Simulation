@@ -31,29 +31,32 @@ export default function Alerts() {
   // Map severity to Alert Level & Palette
   const getAlertConfig = (severity) => {
     const sev = (severity || '').toLowerCase();
-    if (sev === 'severe') {
+    if (sev === 'severe' || sev === 'high') {
       return {
-        level: 'CRITICAL',
-        badgeBg: 'bg-red-500/20 border-red-500/50 text-red-400',
-        cardBg: 'bg-slate-900/90 border-red-900/40 hover:border-red-600/60',
-        glow: 'shadow-red-950/30',
-        icon: '🚨',
+        level: 'SEVERE ALERT',
+        badgeBg: 'bg-[#FEE2E2] border-[#FCA5A5] text-[#DC2626]',
+        cardBg: 'bg-[#FEE2E2]/60 border-[#FCA5A5] border-l-4 text-slate-800 hover:bg-[#FEE2E2]/85',
+        glow: 'shadow-red-100',
+        icon: '🔴',
+        label: 'Extreme weather threat detected'
       };
-    } else if (sev === 'moderate') {
+    } else if (sev === 'moderate' || sev === 'warning') {
       return {
-        level: 'HIGH',
-        badgeBg: 'bg-orange-500/20 border-orange-500/50 text-orange-400',
-        cardBg: 'bg-slate-900/90 border-orange-900/40 hover:border-orange-600/60',
-        glow: 'shadow-orange-950/30',
-        icon: '⚠️',
+        level: 'MODERATE RISK',
+        badgeBg: 'bg-[#FEF3C7] border-[#FDE047] text-[#D97706]',
+        cardBg: 'bg-[#FEF3C7]/60 border-[#FDE047] border-l-4 text-slate-800 hover:bg-[#FEF3C7]/85',
+        glow: 'shadow-yellow-100',
+        icon: '🟡',
+        label: 'Heavy rainfall or normal severity expected'
       };
     } else {
       return {
-        level: 'ADVISORY',
-        badgeBg: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400',
-        cardBg: 'bg-slate-900/90 border-emerald-900/40 hover:border-emerald-600/60',
-        glow: 'shadow-emerald-950/30',
-        icon: 'ℹ️',
+        level: 'LOW RISK',
+        badgeBg: 'bg-[#DCFCE7] border-[#86EFAC] text-[#15803D]',
+        cardBg: 'bg-[#DCFCE7]/60 border-[#86EFAC] border-l-4 text-slate-800 hover:bg-[#DCFCE7]/85',
+        glow: 'shadow-green-100',
+        icon: '🟢',
+        label: 'No significant weather threat detected'
       };
     }
   };
@@ -70,7 +73,10 @@ export default function Alerts() {
     return sortedAlerts.filter((item) => {
       const config = getAlertConfig(item.severity);
       const matchesFilter =
-        filterSeverity === 'ALL' || config.level === filterSeverity;
+        filterSeverity === 'ALL' || 
+        (filterSeverity === 'CRITICAL' && config.level === 'SEVERE ALERT') ||
+        (filterSeverity === 'HIGH' && config.level === 'MODERATE RISK') ||
+        (filterSeverity === 'ADVISORY' && config.level === 'LOW RISK');
       const matchesSearch =
         item.location_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,44 +85,44 @@ export default function Alerts() {
     });
   }, [sortedAlerts, filterSeverity, searchQuery]);
 
-  const criticalCount = events.filter((e) => e.severity?.toLowerCase() === 'severe').length;
-  const highCount = events.filter((e) => e.severity?.toLowerCase() === 'moderate').length;
-  const advisoryCount = events.filter((e) => e.severity?.toLowerCase() === 'low').length;
+  const criticalCount = events.filter((e) => e.severity?.toLowerCase() === 'severe' || e.severity?.toLowerCase() === 'high').length;
+  const highCount = events.filter((e) => e.severity?.toLowerCase() === 'moderate' || e.severity?.toLowerCase() === 'warning').length;
+  const advisoryCount = events.filter((e) => e.severity?.toLowerCase() === 'low' || e.severity?.toLowerCase() === 'safe').length;
 
   const formatEventType = (type) => {
     return (type || '').replace('_', ' ').toUpperCase();
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-slate-800">
       {/* Top Banner Header */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-xs font-mono font-bold tracking-widest text-red-400 uppercase">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-650 animate-pulse"></span>
+              <span className="text-xs font-mono font-bold tracking-widest text-red-700 uppercase">
                 Emergency Alert Center
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-100 uppercase tracking-wide">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
               Active Hazard Warnings & Advisories
             </h1>
           </div>
 
           {/* Quick Counter Pills */}
           <div className="flex items-center space-x-2 font-mono text-xs">
-            <div className="px-3 py-1.5 bg-red-950/80 border border-red-800/60 rounded-lg text-red-300 font-bold flex items-center gap-1.5">
+            <div className="px-3 py-1.5 bg-[#FEE2E2] border border-[#FCA5A5] rounded-lg text-[#DC2626] font-bold flex items-center gap-1.5">
               <span>CRITICAL:</span>
-              <span className="text-white bg-red-600 px-1.5 py-0.5 rounded text-[10px]">{criticalCount}</span>
+              <span className="text-white bg-[#DC2626] px-1.5 py-0.5 rounded text-[10px]">{criticalCount}</span>
             </div>
-            <div className="px-3 py-1.5 bg-orange-950/80 border border-orange-800/60 rounded-lg text-orange-300 font-bold flex items-center gap-1.5">
+            <div className="px-3 py-1.5 bg-[#FEF3C7] border border-[#FDE047] rounded-lg text-[#D97706] font-bold flex items-center gap-1.5">
               <span>HIGH:</span>
-              <span className="text-white bg-orange-600 px-1.5 py-0.5 rounded text-[10px]">{highCount}</span>
+              <span className="text-white bg-[#D97706] px-1.5 py-0.5 rounded text-[10px]">{highCount}</span>
             </div>
-            <div className="px-3 py-1.5 bg-emerald-950/80 border border-emerald-800/60 rounded-lg text-emerald-300 font-bold flex items-center gap-1.5">
+            <div className="px-3 py-1.5 bg-[#DCFCE7] border border-[#86EFAC] rounded-lg text-[#15803D] font-bold flex items-center gap-1.5">
               <span>ADVISORY:</span>
-              <span className="text-white bg-emerald-600 px-1.5 py-0.5 rounded text-[10px]">{advisoryCount}</span>
+              <span className="text-white bg-[#15803D] px-1.5 py-0.5 rounded text-[10px]">{advisoryCount}</span>
             </div>
           </div>
         </div>
@@ -124,15 +130,15 @@ export default function Alerts() {
         {/* Filter and Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
           {/* Level Filter Tabs */}
-          <div className="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800 w-full sm:w-auto">
+          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
             {['ALL', 'CRITICAL', 'HIGH', 'ADVISORY'].map((lvl) => (
               <button
                 key={lvl}
                 onClick={() => setFilterSeverity(lvl)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
                   filterSeverity === lvl
-                    ? 'bg-slate-800 text-cyan-400 border border-cyan-500/40 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    ? 'bg-white text-blue-600 border border-slate-200 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'
                 }`}
               >
                 {lvl}
@@ -147,7 +153,7 @@ export default function Alerts() {
               placeholder="Search location or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 font-mono focus:outline-none focus:border-cyan-500"
+              className="w-full bg-slate-50 border border-slate-305 rounded-xl px-3.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
@@ -157,22 +163,22 @@ export default function Alerts() {
       {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-56 bg-slate-900 border border-slate-800 rounded-2xl animate-pulse"></div>
+            <div key={i} className="h-56 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
           ))}
         </div>
       )}
 
       {/* Error State */}
       {error && (
-        <div className="p-6 bg-red-950/60 border border-red-800 rounded-2xl text-red-200 text-xs font-mono">
+        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-mono">
           {error}
         </div>
       )}
 
       {/* Empty State */}
       {!loading && !error && filteredAlerts.length === 0 && (
-        <div className="p-12 text-center bg-slate-900/60 border border-slate-800 rounded-2xl space-y-2">
-          <p className="text-sm font-bold text-slate-300">No active alerts found matching criteria.</p>
+        <div className="p-12 text-center bg-white border border-[#D9E4EE] rounded-2xl space-y-2">
+          <p className="text-sm font-bold text-slate-800">No active alerts found matching criteria.</p>
           <p className="text-xs font-mono text-slate-500">Try adjusting your severity filter or search query.</p>
         </div>
       )}
@@ -187,7 +193,7 @@ export default function Alerts() {
             return (
               <div
                 key={event.event_id}
-                className={`border rounded-2xl p-6 shadow-xl backdrop-blur transition-all flex flex-col justify-between space-y-4 ${config.cardBg} ${config.glow}`}
+                className={`border rounded-2xl p-6 shadow-sm transition-all flex flex-col justify-between space-y-4 ${config.cardBg} ${config.glow}`}
               >
                 {/* Card Header: Level Badge & Event ID */}
                 <div className="space-y-3">
@@ -199,38 +205,43 @@ export default function Alerts() {
                       <span>{config.level}</span>
                     </span>
 
-                    <span className="text-xs font-mono font-bold text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                    <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
                       {event.event_id}
                     </span>
                   </div>
 
                   {/* Title & Location */}
                   <div>
-                    <h2 className="text-xl font-bold text-slate-100 uppercase tracking-wide">
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-wide">
                       {formatEventType(event.type)}
                     </h2>
-                    <p className="text-sm font-mono text-cyan-400 font-semibold mt-0.5 flex items-center gap-1">
+                    <p className="text-sm font-mono text-blue-600 font-semibold mt-0.5 flex items-center gap-1">
                       📍 {event.location_name}
                     </p>
                   </div>
                 </div>
 
                 {/* Details Section */}
-                <div className="space-y-3 pt-2 border-t border-slate-800/80 text-xs font-mono">
+                <div className="space-y-3 pt-2 border-t border-slate-200 text-xs font-mono">
+                  {/* Custom Label */}
+                  <div className="text-slate-600 text-[11px]">
+                    {config.label}
+                  </div>
+
                   {/* Probability Bar */}
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Confidence / Probability:</span>
-                      <span className="text-slate-200 font-bold">{probPct}%</span>
+                      <span className="text-slate-550">Confidence / Probability:</span>
+                      <span className="text-slate-800 font-bold">{probPct}%</span>
                     </div>
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-200">
                       <div
                         className={`h-full rounded-full ${
                           probPct >= 80
-                            ? 'bg-red-500'
+                            ? 'bg-[#DC2626]'
                             : probPct >= 60
-                            ? 'bg-orange-500'
-                            : 'bg-emerald-500'
+                            ? 'bg-[#D97706]'
+                            : 'bg-[#15803D]'
                         }`}
                         style={{ width: `${probPct}%` }}
                       ></div>
@@ -238,10 +249,10 @@ export default function Alerts() {
                   </div>
 
                   {/* Valid Window & Lead Time */}
-                  <div className="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
-                    <div className="text-[11px] text-slate-400 flex justify-between">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+                    <div className="text-[11px] text-slate-600 flex justify-between">
                       <span>Valid Window:</span>
-                      <span className="text-slate-300 font-semibold">Current (+{event.forecast_lead_time_hours || 48}h)</span>
+                      <span className="text-slate-800 font-semibold">Current (+{event.forecast_lead_time_hours || 48}h)</span>
                     </div>
                     <div className="text-[11px] text-slate-500">
                       Detected: {event.detected_at ? new Date(event.detected_at).toUTCString().replace(' GMT', '') : 'Active System Window'}
@@ -253,7 +264,8 @@ export default function Alerts() {
                 <div className="pt-2">
                   <Link
                     to={`/events/${event.event_id}`}
-                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-100 hover:text-cyan-300 border border-slate-700 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                    onClick={() => localStorage.setItem('lastActiveEventId', event.event_id)}
+                    className="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
                   >
                     <span>View Event Intelligence</span>
                     <span>→</span>
@@ -267,4 +279,3 @@ export default function Alerts() {
     </div>
   );
 }
-

@@ -16,6 +16,13 @@ export default function EventRisk() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
+  // Sync eventId to localStorage on mount
+  useEffect(() => {
+    if (eventId) {
+      localStorage.setItem('lastActiveEventId', eventId);
+    }
+  }, [eventId]);
+
   // Initial load: Fetch event detail, forecast timeline, and initial risk snapshot
   useEffect(() => {
     async function loadInitialData() {
@@ -104,18 +111,18 @@ export default function EventRisk() {
   if (notFound) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-6 text-center">
-        <div className="p-12 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-2xl">
-          <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center mx-auto text-xl font-bold font-mono">
+        <div className="p-12 bg-white border border-[#D9E4EE] rounded-2xl space-y-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
             404
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Risk Snapshot Not Found</h1>
-          <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
-            No active risk assessment matching identifier <span className="text-cyan-400 font-bold">{eventId}</span> was found in the decision engine.
+          <h1 className="text-2xl font-bold text-slate-900">Risk Snapshot Not Found</h1>
+          <p className="text-xs font-mono text-slate-500 max-w-md mx-auto">
+            No active risk assessment matching identifier <span className="text-blue-600 font-bold">{eventId}</span> was found in the decision engine.
           </p>
           <div className="pt-2">
             <Link
               to="/events"
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
             >
               ← Return to Events Explorer
             </Link>
@@ -129,9 +136,9 @@ export default function EventRisk() {
   if (loading) {
     return (
       <div className="p-8 max-w-7xl mx-auto space-y-6">
-        <div className="h-24 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
-        <div className="h-32 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
-        <div className="h-64 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"></div>
+        <div className="h-24 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
+        <div className="h-32 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
+        <div className="h-64 bg-white border border-[#D9E4EE] rounded-xl animate-pulse"></div>
       </div>
     );
   }
@@ -140,10 +147,10 @@ export default function EventRisk() {
   if (error || !riskData) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-950/60 border border-red-800 rounded-xl text-red-200 text-xs font-mono">
+        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
           {error || 'Failed to load risk assessment.'}
         </div>
-        <Link to="/events" className="text-xs text-cyan-400 hover:underline">
+        <Link to="/events" className="text-xs text-blue-600 hover:underline">
           ← Back to Events
         </Link>
       </div>
@@ -153,31 +160,31 @@ export default function EventRisk() {
   const currentStepLabel = forecastTimeline[selectedTimestepIndex]?.timestep_label || riskData.timestep_label;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-slate-800">
       {/* Navigation Breadcrumbs & Cross-links */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
-          <Link to="/events" className="hover:text-cyan-400 transition-colors">
+        <div className="flex items-center space-x-2 text-xs font-mono text-slate-500">
+          <Link to="/events" className="hover:text-blue-600 transition-colors">
             Events
           </Link>
           <span>/</span>
-          <Link to={`/events/${eventId}`} className="hover:text-cyan-400 transition-colors text-slate-300">
+          <Link to={`/events/${eventId}`} className="hover:text-blue-600 transition-colors text-slate-700">
             {eventId}
           </Link>
           <span>/</span>
-          <span className="text-cyan-400 font-bold">Impact & Risk</span>
+          <span className="text-blue-600 font-bold">Impact & Risk</span>
         </div>
 
         <div className="flex items-center space-x-3">
           <Link
             to={`/events/${eventId}`}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-350 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
           >
             ← Event Overview
           </Link>
           <Link
             to={`/events/${eventId}/forecast`}
-            className="px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
           >
             ← Localized Forecast
           </Link>
@@ -185,32 +192,32 @@ export default function EventRisk() {
       </div>
 
       {/* Main Header Banner */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 shadow-2xl backdrop-blur space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-mono text-cyan-400 font-bold px-2 py-0.5 bg-cyan-950/80 border border-cyan-800/60 rounded">
+              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
                 {eventId}
               </span>
-              <span className="text-xs text-slate-400 font-mono">
-                IMPACT ASSESSMENT: <strong className="text-slate-200">{riskData.impact_region_name}</strong>
+              <span className="text-xs text-slate-500 font-mono">
+                IMPACT ASSESSMENT: <strong className="text-slate-800">{riskData.impact_region_name}</strong>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-100 uppercase tracking-wide">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
               Decision-Relevant Risk & Impact Analysis
-              {eventDetail && <span className="text-slate-400 font-normal"> — {eventDetail.location_name} ({formatEventType(eventDetail.type)})</span>}
+              {eventDetail && <span className="text-slate-500 font-normal"> — {eventDetail.location_name} ({formatEventType(eventDetail.type)})</span>}
             </h1>
           </div>
 
           <div className="flex items-center space-x-3">
-            <span className="text-xs font-mono text-slate-400">Timestep Snapshot:</span>
-            <span className="px-3 py-1 bg-cyan-950 border border-cyan-700 rounded font-mono font-bold text-xs text-cyan-300">
+            <span className="text-xs font-mono text-slate-500">Timestep Snapshot:</span>
+            <span className="px-3 py-1 bg-blue-50 border border-blue-200 rounded font-mono font-bold text-xs text-blue-700">
               {currentStepLabel}
             </span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-300 font-sans leading-relaxed">
+        <p className="text-xs text-slate-650 font-sans leading-relaxed">
           Translating raw meteorological ensemble data into operational impact thresholds, multi-hazard risk probabilities, and critical disruption timelines.
         </p>
       </div>
@@ -226,16 +233,16 @@ export default function EventRisk() {
       {/* Main Content Grid: Prominent Overall Risk & Category Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Prominent Overall Risk Banner (1 Col) */}
-        <div className="lg:col-span-1 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur space-y-6 flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:col-span-1 bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="space-y-6 relative z-10">
-            <div className="border-b border-slate-800 pb-3">
-              <h2 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider">
+            <div className="border-b border-slate-100 pb-3">
+              <h2 className="text-xs font-bold font-mono text-slate-500 uppercase tracking-wider">
                 Overall Risk Assessment ({currentStepLabel})
               </h2>
             </div>
 
             {/* Large Prominent Overall Risk Display */}
-            <div className="p-6 bg-slate-950/80 border border-slate-800 rounded-2xl text-center space-y-3 shadow-inner">
+            <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-3 shadow-inner">
               <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">
                 Composite Risk Level
               </span>
@@ -243,27 +250,27 @@ export default function EventRisk() {
               <div className="py-2">
                 <SeverityBadge
                   severity={riskData.overall_risk}
-                  className="text-2xl px-6 py-2.5 shadow-lg tracking-widest"
+                  className="text-2xl px-6 py-2.5 shadow-sm tracking-widest"
                 />
               </div>
 
-              <div className="text-xs font-mono text-slate-400 pt-2 border-t border-slate-800/80">
-                Evaluating <span className="text-cyan-300 font-bold">{currentStepLabel}</span> Forecast Horizon
+              <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-200">
+                Evaluating <span className="text-blue-600 font-bold">{currentStepLabel}</span> Forecast Horizon
               </div>
             </div>
 
             {/* Spatial Footprint Metrics */}
-            <div className="space-y-3 font-mono text-xs">
-              <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1">
+            <div className="space-y-3 font-mono text-xs text-slate-800">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Impact Region Target</span>
-                <span className="text-sm font-bold text-slate-100 block">
+                <span className="text-sm font-bold text-slate-800 block">
                   {riskData.impact_region_name}
                 </span>
               </div>
 
-              <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Estimated Impact Radius</span>
-                <span className="text-lg font-bold text-cyan-300">
+                <span className="text-lg font-bold text-blue-600">
                   {riskData.impact_radius_km} km
                 </span>
               </div>
@@ -271,44 +278,44 @@ export default function EventRisk() {
           </div>
 
           {loadingRisk && (
-            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center text-cyan-400 font-mono text-xs z-20">
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center text-blue-600 font-mono text-xs z-20">
               <span className="animate-pulse">Updating Risk Model...</span>
             </div>
           )}
         </div>
 
         {/* Right Column: Risk Category Breakdown Table (2 Cols) */}
-        <div className="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur space-y-6 relative">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="lg:col-span-2 bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-6 relative">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                 Multi-Hazard Risk Category Breakdown
               </h2>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">
+              <p className="text-xs text-slate-550 font-mono mt-0.5">
                 Quantified probability and severity level per primary environmental hazard.
               </p>
             </div>
             {loadingRisk && (
-              <span className="text-xs font-mono text-cyan-400 animate-pulse">Refreshing...</span>
+              <span className="text-xs font-mono text-blue-600 animate-pulse">Refreshing...</span>
             )}
           </div>
 
           {/* Risk Categories Table / Card List */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-slate-800">
             {/* Flood Risk Card */}
-            <div className="p-4 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-3 hover:border-slate-700 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg">
+                  <div className="p-2 bg-blue-50 text-blue-650 border border-blue-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                       Flood & Inundation Risk
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-mono">
+                    <p className="text-[11px] text-slate-500 font-mono">
                       Flash flooding, urban drainage overload, and riverine rise
                     </p>
                   </div>
@@ -316,35 +323,35 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.flood_risk_level} />
-                  <span className="text-sm font-mono font-bold text-cyan-300 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-blue-600 min-w-[50px] text-right">
                     {Math.round(riskData.flood_risk_probability * 100)}%
                   </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full bg-slate-800/80 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${riskData.flood_risk_probability * 100}%` }}
                 ></div>
               </div>
             </div>
 
             {/* Wind Risk Card */}
-            <div className="p-4 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-3 hover:border-slate-700 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg">
+                  <div className="p-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                       Wind Damage Risk
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-mono">
+                    <p className="text-[11px] text-slate-500 font-mono">
                       Structural damage, fallen powerlines, gale gusts & coastal sea swell
                     </p>
                   </div>
@@ -352,14 +359,14 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.wind_risk_level} />
-                  <span className="text-sm font-mono font-bold text-amber-300 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-amber-700 min-w-[50px] text-right">
                     {Math.round(riskData.wind_risk_probability * 100)}%
                   </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full bg-slate-800/80 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-amber-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${riskData.wind_risk_probability * 100}%` }}
@@ -368,19 +375,19 @@ export default function EventRisk() {
             </div>
 
             {/* Heat Risk Card */}
-            <div className="p-4 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-3 hover:border-slate-700 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg">
+                  <div className="p-2 bg-red-50 text-red-705 border border-red-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                       Thermal Stress & Heat Risk
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-mono">
+                    <p className="text-[11px] text-slate-500 font-mono">
                       Extreme heatwave conditions, grid overload & thermal discomfort
                     </p>
                   </div>
@@ -388,14 +395,14 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.heat_risk_level} />
-                  <span className="text-sm font-mono font-bold text-red-300 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-red-700 min-w-[50px] text-right">
                     {Math.round(riskData.heat_risk_probability * 100)}%
                   </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full bg-slate-800/80 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-red-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${riskData.heat_risk_probability * 100}%` }}
@@ -407,50 +414,50 @@ export default function EventRisk() {
       </div>
 
       {/* Critical Impact Timeline Window Section */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur space-y-4">
-        <div className="border-b border-slate-800 pb-3">
-          <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+      <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="border-b border-slate-100 pb-3">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
             Critical Disruption Time Windows
           </h2>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
+          <p className="text-xs text-slate-500 font-mono mt-0.5">
             Operational window boundaries for emergency planning and asset protection.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5">
-            <span className="text-[10px] text-slate-500 uppercase block font-bold">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs text-slate-800">
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <span className="text-[10px] text-slate-550 uppercase block font-bold">
               1. Expected Onset / Start Time
             </span>
-            <span className="text-sm font-bold text-slate-200 block">
+            <span className="text-sm font-bold text-slate-800 block">
               {formatDate(riskData.expected_start)}
             </span>
-            <span className="text-[10px] text-slate-400 block">
+            <span className="text-[10px] text-slate-500 block">
               Initial impact boundary
             </span>
           </div>
 
-          <div className="p-4 bg-amber-950/30 border border-amber-800/50 rounded-xl space-y-1.5">
-            <span className="text-[10px] text-amber-400 uppercase block font-bold">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-1.5">
+            <span className="text-[10px] text-amber-700 uppercase block font-bold">
               2. Peak Threat Window
             </span>
-            <span className="text-sm font-bold text-amber-200 block">
+            <span className="text-sm font-bold text-amber-800 block">
               {formatDate(riskData.peak_period)}
             </span>
-            <span className="text-[10px] text-amber-300/80 block">
+            <span className="text-[10px] text-amber-600 block">
               Maximum intensity & hazard exposure
             </span>
           </div>
 
-          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5">
-            <span className="text-[10px] text-slate-500 uppercase block font-bold">
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <span className="text-[10px] text-slate-550 uppercase block font-bold">
               3. Expected Dissipation / End
             </span>
-            <span className="text-sm font-bold text-slate-200 block">
+            <span className="text-sm font-bold text-slate-800 block">
               {formatDate(riskData.expected_end)}
             </span>
-            <span className="text-[10px] text-slate-400 block">
+            <span className="text-[10px] text-slate-500 block">
               System departure / recovery phase
             </span>
           </div>
