@@ -4,9 +4,9 @@ const navItems = [
   { path: '/', label: 'Overview', end: true },
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/events', label: 'Events Explorer', end: true },
-  { path: '/events/evt-101', label: 'Event Detail' },
-  { path: '/events/evt-101/forecast', label: 'Event Forecast' },
-  { path: '/events/evt-101/risk', label: 'Event Risk' },
+  { path: '/events/EVT-2026-001', label: 'Event Detail' },
+  { path: '/events/EVT-2026-001/forecast', label: 'Event Forecast' },
+  { path: '/events/EVT-2026-001/risk', label: 'Event Risk' },
   { path: '/alerts', label: 'Alerts' },
   { path: '/system', label: 'System Info' },
 ];

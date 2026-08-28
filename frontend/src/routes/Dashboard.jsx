@@ -80,7 +80,10 @@ export default function Dashboard() {
   }, [fetchEventData]);
 
   useEffect(() => {
-    loadEvents();
+    async function init() {
+      await loadEvents();
+    }
+    init();
   }, [loadEvents]);
 
   // Handle manual selection of an event card or marker
