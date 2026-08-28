@@ -3,6 +3,8 @@ export default function SeverityBadge({ severity, className = '' }) {
     switch (sev?.toLowerCase()) {
       case 'severe':
         return 'bg-red-500/20 text-red-400 border-red-500/40 shadow-red-950/20';
+      case 'high':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/40 shadow-orange-950/20';
       case 'moderate':
         return 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-amber-950/20';
       case 'low':
@@ -22,3 +24,4 @@ export default function SeverityBadge({ severity, className = '' }) {
     </span>
   );
 }
+

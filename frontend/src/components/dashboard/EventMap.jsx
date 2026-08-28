@@ -11,10 +11,36 @@ import {
 } from 'react-leaflet';
 import { createEventIcon, createTrajectoryStepIcon } from './mapIcons';
 
+const parseLatLng = (lat, lon) => {
+  const numLat = typeof lat === 'string' ? parseFloat(lat) : lat;
+  const numLon = typeof lon === 'string' ? parseFloat(lon) : lon;
+  if (
+    typeof numLat === 'number' &&
+    !isNaN(numLat) &&
+    typeof numLon === 'number' &&
+    !isNaN(numLon) &&
+    numLat >= -90 &&
+    numLat <= 90 &&
+    numLon >= -180 &&
+    numLon <= 180
+  ) {
+    return [numLat, numLon];
+  }
+  return null;
+};
+
 function MapRecenter({ center }) {
   const map = useMap();
   useEffect(() => {
-    if (center && Array.isArray(center) && center.length === 2) {
+    if (
+      center &&
+      Array.isArray(center) &&
+      center.length === 2 &&
+      typeof center[0] === 'number' &&
+      !isNaN(center[0]) &&
+      typeof center[1] === 'number' &&
+      !isNaN(center[1])
+    ) {
       map.panTo(center, { animate: true, duration: 1 });
     }
   }, [center, map]);
@@ -28,20 +54,43 @@ export default function EventMap({
   selectedTimestepIndex = 0,
   onSelectEvent,
 }) {
-  const selectedEvent = events.find((e) => e.event_id === selectedEventId);
+  const selectedEvent = (events || []).find((e) => e && e.event_id === selectedEventId);
   const timeline = selectedEventForecast?.timeline || [];
   const currentStep = timeline[selectedTimestepIndex] || null;
 
   // Trajectory polyline coordinates
-  const trajectoryPositions = timeline.map((step) => [
-    step.centroid.lat,
-    step.centroid.lon,
-  ]);
+  const trajectoryPositions = timeline
+    .map((step) => parseLatLng(step?.centroid?.lat, step?.centroid?.lon))
+    .filter(Boolean);
 
   // Center position for map pan
-  const mapCenter = selectedEvent
-    ? [selectedEvent.centroid_lat, selectedEvent.centroid_lon]
-    : [21.5, 74.0];
+  const DEFAULT_CENTER = [21.5, 74.0];
+  const selectedPos = selectedEvent
+    ? parseLatLng(selectedEvent.centroid_lat, selectedEvent.centroid_lon)
+    : null;
+
+  const validEvents = (events || []).filter(
+    (evt) => evt && parseLatLng(evt.centroid_lat, evt.centroid_lon) !== null
+  );
+
+  const fallbackPos =
+    validEvents.length > 0
+      ? parseLatLng(validEvents[0].centroid_lat, validEvents[0].centroid_lon)
+      : null;
+
+  const mapCenter = selectedPos || fallbackPos || DEFAULT_CENTER;
+
+  const currentStepPos = currentStep
+    ? parseLatLng(currentStep.centroid?.lat, currentStep.centroid?.lon)
+    : null;
+
+  const sw = currentStep?.bbox
+    ? parseLatLng(currentStep.bbox.min_lat, currentStep.bbox.min_lon)
+    : null;
+  const ne = currentStep?.bbox
+    ? parseLatLng(currentStep.bbox.max_lat, currentStep.bbox.max_lon)
+    : null;
+  const bboxBounds = sw && ne ? [sw, ne] : null;
 
   return (
     <div className="relative w-full h-[450px] sm:h-[500px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
@@ -66,24 +115,26 @@ export default function EventMap({
         />
 
         {/* All Active Event Markers */}
-        {events.map((evt) => {
+        {validEvents.map((evt) => {
           const isSelected = evt.event_id === selectedEventId;
+          const pos = parseLatLng(evt.centroid_lat, evt.centroid_lon);
+          if (!pos) return null;
           return (
             <Marker
               key={evt.event_id}
-              position={[evt.centroid_lat, evt.centroid_lon]}
+              position={pos}
               icon={createEventIcon(evt.severity, isSelected)}
               eventHandlers={{
-                click: () => onSelectEvent(evt.event_id),
+                click: () => onSelectEvent && onSelectEvent(evt.event_id),
               }}
             >
               <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
                 <div className="text-xs space-y-1">
                   <div className="font-bold uppercase tracking-wider text-slate-200">
-                    {evt.event_id} — {evt.location_name}
+                    {evt.event_id} — {evt.location_name || 'Unknown Location'}
                   </div>
                   <div className="capitalize text-slate-300">
-                    {evt.type.replace('_', ' ')}
+                    {(evt.type || '').replace('_', ' ')}
                   </div>
                   <div className="flex items-center justify-between gap-3 text-[11px] pt-1 border-t border-slate-700">
                     <span
@@ -95,10 +146,10 @@ export default function EventMap({
                           : 'text-emerald-400'
                       }`}
                     >
-                      {evt.severity}
+                      {evt.severity || 'info'}
                     </span>
                     <span className="text-slate-400">
-                      {Math.round(evt.probability * 100)}% prob
+                      {Math.round((evt.probability || 0) * 100)}% prob
                     </span>
                   </div>
                 </div>
@@ -122,16 +173,18 @@ export default function EventMap({
 
         {/* Trajectory Waypoint Markers */}
         {timeline.map((step, idx) => {
+          const pos = parseLatLng(step?.centroid?.lat, step?.centroid?.lon);
+          if (!pos) return null;
           const isCurrent = idx === selectedTimestepIndex;
           return (
             <Marker
-              key={`tp-${step.timestep_label}`}
-              position={[step.centroid.lat, step.centroid.lon]}
+              key={`tp-${step.timestep_label || idx}`}
+              position={pos}
               icon={createTrajectoryStepIcon(isCurrent)}
             >
               <Tooltip direction="bottom" offset={[0, 10]} opacity={0.9}>
                 <div className="text-[11px] font-mono text-cyan-300">
-                  {step.timestep_label} (Offset: {step.timestep_hours_offset}h)
+                  {step.timestep_label || `Step ${idx}`} (Offset: {step.timestep_hours_offset ?? 0}h)
                 </div>
               </Tooltip>
             </Marker>
@@ -139,9 +192,9 @@ export default function EventMap({
         })}
 
         {/* Uncertainty Region Circle for Selected Timestep */}
-        {currentStep && (
+        {currentStepPos && currentStep?.uncertainty_radius_km > 0 && (
           <Circle
-            center={[currentStep.centroid.lat, currentStep.centroid.lon]}
+            center={currentStepPos}
             radius={currentStep.uncertainty_radius_km * 1000}
             pathOptions={{
               color: '#06b6d4',
@@ -154,12 +207,9 @@ export default function EventMap({
         )}
 
         {/* Bounding Box Rectangle for Selected Timestep */}
-        {currentStep && currentStep.bbox && (
+        {bboxBounds && (
           <Rectangle
-            bounds={[
-              [currentStep.bbox.min_lat, currentStep.bbox.min_lon],
-              [currentStep.bbox.max_lat, currentStep.bbox.max_lon],
-            ]}
+            bounds={bboxBounds}
             pathOptions={{
               color: '#f43f5e',
               fillColor: '#f43f5e',

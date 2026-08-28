@@ -315,7 +315,8 @@ export default function EventDetail() {
               <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
                 <span className="text-slate-500 uppercase text-[10px] block">Current Centroid</span>
                 <span className="text-slate-200 font-bold">
-                  {eventDetail.centroid_lat.toFixed(2)}°N, {eventDetail.centroid_lon.toFixed(2)}°E
+                  {typeof eventDetail?.centroid_lat === 'number' ? eventDetail.centroid_lat.toFixed(2) : 'N/A'}°N,{' '}
+                  {typeof eventDetail?.centroid_lon === 'number' ? eventDetail.centroid_lon.toFixed(2) : 'N/A'}°E
                 </span>
               </div>
               <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg">
