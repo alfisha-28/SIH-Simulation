@@ -1,0 +1,17 @@
+name: weather-intelligence-backend
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: weather-intelligence-backend:latest
+    container_name: weather-intelligence-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    restart: unless-stopped
