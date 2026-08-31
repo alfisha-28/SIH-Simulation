@@ -56,3 +56,7 @@ body {
   background: transparent !important;
   border: none !important;
 }
+
+.dark-tile-layer .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
+}
