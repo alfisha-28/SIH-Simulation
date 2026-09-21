@@ -21,6 +21,8 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 # Database Settings
 DEFAULT_DB_PATH = BASE_DIR / "app" / "data.db"
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # CORS Settings
 raw_cors = os.getenv("CORS_ORIGINS", "*")
