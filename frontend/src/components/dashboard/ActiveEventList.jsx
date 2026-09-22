@@ -14,7 +14,7 @@ export default function ActiveEventList({
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
           Active Events ({events.length})
         </h3>
         <span className="text-[11px] text-slate-400 font-mono font-medium">Sorted by Risk</span>
@@ -35,7 +35,7 @@ export default function ActiveEventList({
                 onClick={() => onSelectEvent(evt.event_id)}
                 className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer space-y-2.5 relative ${
                   isSelected
-                    ? 'bg-blue-50/80 border-blue-500/60 shadow-md ring-2 ring-blue-500/15'
+                    ? 'bg-blue-50/60 border-blue-300'
                     : 'bg-slate-50/70 border-slate-200/80 hover:border-slate-300 hover:bg-white hover:shadow-sm hover:-translate-y-0.5'
                 }`}
               >
@@ -55,7 +55,7 @@ export default function ActiveEventList({
                 {/* Middle Row: Location Name */}
                 <div className="text-sm font-bold text-slate-900 pl-1 flex items-center justify-between">
                   <span className="truncate">{evt.location_name}</span>
-                  <span className="text-xs font-mono text-blue-600 font-bold bg-blue-100/70 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded-md">
                     {Math.round(evt.probability * 100)}% prob
                   </span>
                 </div>

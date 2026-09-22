@@ -5,33 +5,15 @@ export default function SeverityBadge({ severity, className = '' }) {
       case 'high':
       case 'critical':
       case 'alert':
-        return 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'moderate':
       case 'warning':
-        return 'bg-[#FEF3C7] text-[#D97706] border-[#FDE047]';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'low':
       case 'safe':
-        return 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       default:
-        return 'bg-[#DBEAFE] text-[#2563EB] border-[#93C5FD]';
-    }
-  };
-
-  const getIcon = (sev) => {
-    switch (sev?.toLowerCase()) {
-      case 'severe':
-      case 'high':
-      case 'critical':
-      case 'alert':
-        return '🔴';
-      case 'moderate':
-      case 'warning':
-        return '🟡';
-      case 'low':
-      case 'safe':
-        return '🟢';
-      default:
-        return '🔵';
+        return 'bg-slate-100 text-slate-600 border-slate-200';
     }
   };
 
@@ -41,7 +23,7 @@ export default function SeverityBadge({ severity, className = '' }) {
         severity
       )} ${className}`}
     >
-      <span>{getIcon(severity)}</span>
+      <span className="w-[0.45em] h-[0.45em] rounded-full bg-current"></span>
       <span>{severity || 'UNKNOWN'}</span>
     </span>
   );

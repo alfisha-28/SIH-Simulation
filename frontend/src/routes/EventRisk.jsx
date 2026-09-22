@@ -178,7 +178,7 @@ export default function EventRisk() {
         <div className="flex items-center space-x-3">
           <Link
             to={`/events/${eventId}`}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-350 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
           >
             ← Event Overview
           </Link>
@@ -217,7 +217,7 @@ export default function EventRisk() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-650 font-sans leading-relaxed">
+        <p className="text-xs text-slate-600 font-sans leading-relaxed">
           Translating raw meteorological ensemble data into operational impact thresholds, multi-hazard risk probabilities, and critical disruption timelines.
         </p>
       </div>
@@ -291,7 +291,7 @@ export default function EventRisk() {
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                 Multi-Hazard Risk Category Breakdown
               </h2>
-              <p className="text-xs text-slate-550 font-mono mt-0.5">
+              <p className="text-xs text-slate-500 font-mono mt-0.5">
                 Quantified probability and severity level per primary environmental hazard.
               </p>
             </div>
@@ -303,10 +303,10 @@ export default function EventRisk() {
           {/* Risk Categories Table / Card List */}
           <div className="space-y-4 text-slate-800">
             {/* Flood Risk Card */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-300 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-50 text-blue-650 border border-blue-200 rounded-lg">
+                  <div className="p-2 bg-white text-slate-500 border border-slate-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
@@ -323,7 +323,7 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.flood_risk_level} />
-                  <span className="text-sm font-mono font-bold text-blue-600 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-slate-900 min-w-[50px] text-right">
                     {Math.round(riskData.flood_risk_probability * 100)}%
                   </span>
                 </div>
@@ -339,10 +339,10 @@ export default function EventRisk() {
             </div>
 
             {/* Wind Risk Card */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-300 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
+                  <div className="p-2 bg-white text-slate-500 border border-slate-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -359,7 +359,7 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.wind_risk_level} />
-                  <span className="text-sm font-mono font-bold text-amber-700 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-slate-900 min-w-[50px] text-right">
                     {Math.round(riskData.wind_risk_probability * 100)}%
                   </span>
                 </div>
@@ -368,17 +368,17 @@ export default function EventRisk() {
               {/* Progress Bar */}
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${riskData.wind_risk_probability * 100}%` }}
                 ></div>
               </div>
             </div>
 
             {/* Heat Risk Card */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-350 transition-colors">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-300 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-red-50 text-red-705 border border-red-200 rounded-lg">
+                  <div className="p-2 bg-white text-slate-500 border border-slate-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                     </svg>
@@ -395,7 +395,7 @@ export default function EventRisk() {
 
                 <div className="flex items-center space-x-3">
                   <SeverityBadge severity={riskData.heat_risk_level} />
-                  <span className="text-sm font-mono font-bold text-red-700 min-w-[50px] text-right">
+                  <span className="text-sm font-mono font-bold text-slate-900 min-w-[50px] text-right">
                     {Math.round(riskData.heat_risk_probability * 100)}%
                   </span>
                 </div>
@@ -404,7 +404,7 @@ export default function EventRisk() {
               {/* Progress Bar */}
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-red-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${riskData.heat_risk_probability * 100}%` }}
                 ></div>
               </div>
@@ -417,7 +417,7 @@ export default function EventRisk() {
       <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-4">
         <div className="border-b border-slate-100 pb-3">
           <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
             Critical Disruption Time Windows
           </h2>
           <p className="text-xs text-slate-500 font-mono mt-0.5">
@@ -427,7 +427,7 @@ export default function EventRisk() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs text-slate-800">
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-            <span className="text-[10px] text-slate-550 uppercase block font-bold">
+            <span className="text-[10px] text-slate-500 uppercase block font-bold">
               1. Expected Onset / Start Time
             </span>
             <span className="text-sm font-bold text-slate-800 block">
@@ -451,7 +451,7 @@ export default function EventRisk() {
           </div>
 
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-            <span className="text-[10px] text-slate-550 uppercase block font-bold">
+            <span className="text-[10px] text-slate-500 uppercase block font-bold">
               3. Expected Dissipation / End
             </span>
             <span className="text-sm font-bold text-slate-800 block">

@@ -66,7 +66,7 @@ export default function EventForecast() {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-6 text-center">
         <div className="p-12 bg-white border border-[#D9E4EE] rounded-2xl space-y-4 shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-red-50 text-red-650 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
+          <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
             404
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Event Forecast Not Found</h1>
@@ -104,7 +104,7 @@ export default function EventForecast() {
   if (error || !forecast) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-750 text-xs font-mono">
+        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
           {error || 'Failed to load forecast data.'}
         </div>
         <Link to="/events" className="text-xs text-blue-600 hover:underline">
@@ -143,13 +143,13 @@ export default function EventForecast() {
         <div className="flex items-center space-x-3">
           <Link
             to={`/events/${eventId}`}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-350 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
           >
             ← Event Overview
           </Link>
           <Link
             to={`/events/${eventId}/risk`}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-md shadow-blue-600/30 inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all inline-flex items-center gap-1.5"
           >
             <span>Risk Assessment</span>
             <span>→</span>
@@ -166,7 +166,7 @@ export default function EventForecast() {
                 {eventId}
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                DOWNSCALING MODEL: <strong className="text-blue-650">ECMWF IFS 12km → HR-Neural 5km</strong>
+                DOWNSCALING MODEL: <strong className="text-slate-800">ECMWF IFS 12km → HR-Neural 5km</strong>
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
@@ -184,7 +184,7 @@ export default function EventForecast() {
         </div>
 
         {/* Timestep info strip */}
-        <div className="flex flex-wrap items-center justify-between text-xs font-mono text-slate-550 gap-2">
+        <div className="flex flex-wrap items-center justify-between text-xs font-mono text-slate-500 gap-2">
           <div>
             Active Timestep Target: <strong className="text-blue-600 font-bold">{currentStep?.timestep_label}</strong> ({currentStep?.timestep_hours_offset}h offset)
           </div>
@@ -192,14 +192,14 @@ export default function EventForecast() {
             Lat/Lon Centroid: <strong className="text-slate-800">{currentStep?.centroid?.lat?.toFixed(2)}°N, {currentStep?.centroid?.lon?.toFixed(2)}°E</strong>
           </div>
           <div>
-            Uncertainty Radius: <strong className="text-amber-700">{currentStep?.uncertainty_radius_km} km</strong>
+            Uncertainty Radius: <strong className="text-slate-800">{currentStep?.uncertainty_radius_km} km</strong>
           </div>
         </div>
       </div>
 
       {/* Explanatory Concept Banner */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-150 rounded-xl p-5 shadow-sm flex items-start space-x-4">
-        <div className="p-2.5 bg-blue-100 border border-blue-200 text-blue-600 shrink-0 rounded-xl">
+      <div className="bg-white border border-[#D9E4EE] rounded-xl p-5 shadow-sm flex items-start space-x-4">
+        <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-600 shrink-0 rounded-xl">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
@@ -208,7 +208,7 @@ export default function EventForecast() {
           <h3 className="font-bold text-blue-700 uppercase tracking-wider font-mono">
             Targeted Resolution Downscaling — 12 km → 5 km Anomaly Focus
           </h3>
-          <p className="leading-relaxed font-sans text-slate-650">
+          <p className="leading-relaxed font-sans text-slate-600">
             Rather than running computationally expensive high-resolution forecasting across the entire global domain, our system dynamically focuses 5 km regional neural-downscaling specifically on the localized region surrounding a detected anomaly. This uncovers fine-scale extreme intensities, localized peak rainfall rates, and terrain-channeled winds that coarse 12 km global models smooth out.
           </p>
         </div>
@@ -237,9 +237,6 @@ export default function EventForecast() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Panel: COARSE FORECAST (12 km) */}
           <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm relative overflow-hidden space-y-6">
-            {/* Background Coarse Grid Overlay Metaphor */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:24px_24px]"></div>
-
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 relative z-10">
               <div>
@@ -330,10 +327,7 @@ export default function EventForecast() {
           </div>
 
           {/* Right Panel: DOWNSCALED FORECAST (5 km) */}
-          <div className="bg-white border-2 border-blue-500 rounded-2xl p-6 shadow-sm relative overflow-hidden space-y-6">
-            {/* Background Fine Grid Overlay Metaphor */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#2563eb_1px,transparent_1px)] [background-size:12px_12px]"></div>
-
+          <div className="bg-white border border-blue-300 rounded-2xl p-6 shadow-sm relative overflow-hidden space-y-6">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-[#D9E4EE] pb-4 relative z-10">
               <div>
@@ -354,46 +348,46 @@ export default function EventForecast() {
 
             {/* Highlighted Key Downscaling Metrics Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs relative z-10">
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-blue-600 uppercase block font-bold">Peak Rainfall</span>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block font-bold">Peak Rainfall</span>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-blue-700">
+                  <span className="text-xl font-black text-slate-900">
                     {downscaled.peak_rainfall_mm ?? 'N/A'}
                   </span>
-                  <span className="text-[10px] text-blue-600">mm</span>
+                  <span className="text-[10px] text-slate-500">mm</span>
                 </div>
                 {rainfallDelta && Number(rainfallDelta) > 0 && (
-                  <span className="text-[10px] font-bold text-[#DC2626] block">
+                  <span className="text-[10px] font-bold text-red-600 block">
                     +{rainfallDelta} mm vs coarse
                   </span>
                 )}
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-blue-600 uppercase block font-bold">Max Intensity</span>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block font-bold">Max Intensity</span>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-amber-700">
+                  <span className="text-xl font-black text-slate-900">
                     {downscaled.max_intensity_mmhr ?? 'N/A'}
                   </span>
-                  <span className="text-[10px] text-amber-600">mm/h</span>
+                  <span className="text-[10px] text-slate-500">mm/h</span>
                 </div>
                 <span className="text-[10px] text-slate-500 block">Peak hourly rate</span>
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-blue-600 uppercase block font-bold">Extreme Preservation</span>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block font-bold">Extreme Preservation</span>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-emerald-700">
+                  <span className="text-xl font-black text-slate-900">
                     {downscaled.extreme_preservation_pct !== undefined
                       ? `${downscaled.extreme_preservation_pct}%`
                       : 'N/A'}
                   </span>
                 </div>
-                <span className="text-[10px] text-emerald-600 block">Tail fidelity</span>
+                <span className="text-[10px] text-slate-500 block">Tail fidelity</span>
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-blue-600 uppercase block font-bold">Model Confidence</span>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block font-bold">Model Confidence</span>
                 <div className="pt-1">
                   <ConfidenceBadge confidence={downscaled.model_confidence} />
                 </div>
@@ -403,9 +397,9 @@ export default function EventForecast() {
 
             {/* Visual Grid Stand-in Metaphor (Fine - Crisp/High Contrast) */}
             <div className="p-4 bg-slate-50 border border-[#D9E4EE] rounded-xl space-y-3 relative z-10">
-              <div className="flex justify-between text-[11px] font-mono text-blue-750">
+              <div className="flex justify-between text-[11px] font-mono text-slate-500">
                 <span>Spatial Grid Metaphor (Fine 8x8 Sharp Grid)</span>
-                <span className="font-bold text-[#DC2626]">Localized Peak: {downscaled.peak_rainfall_mm} mm</span>
+                <span className="font-bold text-red-600">Localized Peak: {downscaled.peak_rainfall_mm} mm</span>
               </div>
               <div className="grid grid-cols-8 gap-1 h-28 p-2 bg-white border border-slate-200 rounded-lg">
                 {[...Array(64)].map((_, i) => {
@@ -416,10 +410,10 @@ export default function EventForecast() {
                       key={i}
                       className={`rounded-sm transition-all flex items-center justify-center text-[7px] font-mono ${
                         isHotspot
-                          ? 'bg-[#DC2626] border border-[#FCA5A5] text-white font-bold animate-pulse shadow-sm'
+                          ? 'bg-red-500 border border-red-300 text-white font-bold animate-pulse shadow-sm'
                           : isNear
-                          ? 'bg-[#FEF3C7] border border-[#FDE047] text-[#D97706]'
-                          : 'bg-blue-50/30 border border-blue-100 text-blue-400'
+                          ? 'bg-amber-100 border border-amber-200 text-amber-700'
+                          : 'bg-slate-50 border border-slate-100 text-slate-400'
                       }`}
                     >
                       {isHotspot ? '5k' : ''}
@@ -433,28 +427,28 @@ export default function EventForecast() {
             <div className="grid grid-cols-2 gap-3 font-mono text-xs relative z-10 text-slate-800">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Area Avg Rainfall</span>
-                <span className="text-base font-bold text-blue-750">
+                <span className="text-base font-bold text-slate-800">
                   {downscaled.rainfall_mm !== undefined ? `${downscaled.rainfall_mm} mm` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Downscaled Temp</span>
-                <span className="text-base font-bold text-blue-750">
+                <span className="text-base font-bold text-slate-800">
                   {downscaled.temperature_c !== undefined ? `${downscaled.temperature_c} °C` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Downscaled Wind</span>
-                <span className="text-base font-bold text-blue-750">
+                <span className="text-base font-bold text-slate-800">
                   {downscaled.wind_speed_kmh !== undefined ? `${downscaled.wind_speed_kmh} km/h` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 uppercase block">Downscaled EFI</span>
-                <span className="text-base font-bold text-blue-750">
+                <span className="text-base font-bold text-slate-800">
                   {downscaled.efi !== undefined ? downscaled.efi.toFixed(2) : 'N/A'}
                 </span>
               </div>

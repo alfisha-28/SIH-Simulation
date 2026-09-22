@@ -29,15 +29,15 @@ export default function KeyMetricsPanel({
     switch (risk?.toLowerCase()) {
       case 'severe':
       case 'high':
-        return 'text-[#DC2626] border-[#FCA5A5] bg-[#FEE2E2]';
+        return 'text-red-700 border-red-200 bg-red-50';
       case 'moderate':
       case 'warning':
-        return 'text-[#D97706] border-[#FDE047] bg-[#FEF3C7]';
+        return 'text-amber-700 border-amber-200 bg-amber-50';
       case 'low':
       case 'safe':
-        return 'text-[#15803D] border-[#86EFAC] bg-[#DCFCE7]';
+        return 'text-emerald-700 border-emerald-200 bg-emerald-50';
       default:
-        return 'text-[#2563EB] border-[#93C5FD] bg-[#DBEAFE]';
+        return 'text-slate-600 border-slate-200 bg-slate-100';
     }
   };
 
@@ -91,7 +91,7 @@ export default function KeyMetricsPanel({
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
             Forecast Intensity
           </span>
-          <div className="text-2xl font-extrabold text-blue-600 font-mono">
+          <div className="text-2xl font-extrabold text-slate-950 font-mono">
             {stepIntensity.toFixed(1)}
             <span className="text-xs text-slate-500 font-sans ml-1 font-normal">mm/24h</span>
           </div>
@@ -105,7 +105,7 @@ export default function KeyMetricsPanel({
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
             Ensemble Agreement
           </span>
-          <div className="text-2xl font-extrabold text-indigo-600 font-mono">
+          <div className="text-2xl font-extrabold text-slate-950 font-mono">
             {Math.round((selectedEvent.ensemble_agreement ?? 0) * 100)}%
           </div>
           <span className="text-[10px] text-slate-500 block font-mono">
@@ -118,7 +118,7 @@ export default function KeyMetricsPanel({
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
             Movement Vector
           </span>
-          <div className="text-lg font-bold text-amber-700 font-mono">
+          <div className="text-lg font-bold text-slate-900 font-mono">
             {selectedEvent.movement_direction || 'N/A'}
           </div>
           <span className="text-xs text-slate-600 font-mono block">
@@ -141,7 +141,7 @@ export default function KeyMetricsPanel({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-slate-600">Rainfall EFI</span>
-              <span className="text-blue-600 font-bold">{rainfallEfi.toFixed(2)}</span>
+              <span className="text-slate-800 font-bold">{rainfallEfi.toFixed(2)}</span>
             </div>
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
               <div
@@ -155,11 +155,11 @@ export default function KeyMetricsPanel({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-slate-600">Temp EFI</span>
-              <span className="text-red-500 font-bold">{tempEfi.toFixed(2)}</span>
+              <span className="text-slate-800 font-bold">{tempEfi.toFixed(2)}</span>
             </div>
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-red-500 h-full rounded-full transition-all duration-300"
+                className="bg-blue-600 h-full rounded-full transition-all duration-300"
                 style={{ width: `${tempEfi * 100}%` }}
               ></div>
             </div>
@@ -169,11 +169,11 @@ export default function KeyMetricsPanel({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-slate-600">Wind EFI</span>
-              <span className="text-amber-600 font-bold">{windEfi.toFixed(2)}</span>
+              <span className="text-slate-800 font-bold">{windEfi.toFixed(2)}</span>
             </div>
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-amber-500 h-full rounded-full transition-all duration-300"
+                className="bg-blue-600 h-full rounded-full transition-all duration-300"
                 style={{ width: `${windEfi * 100}%` }}
               ></div>
             </div>
@@ -186,7 +186,7 @@ export default function KeyMetricsPanel({
         <div className="p-4 bg-slate-50 border border-[#D9E4EE] rounded-lg space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
               ML Downscaling Comparison (Coarse vs High-Res)
             </span>
             <span className="text-[11px] font-mono text-blue-600">
@@ -218,7 +218,7 @@ export default function KeyMetricsPanel({
             </div>
 
             {/* 5km Downscaled Box */}
-            <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-md space-y-1.5 shadow-inner">
+            <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-md space-y-1.5">
               <div className="text-[11px] font-mono font-bold text-blue-700 uppercase tracking-wide flex justify-between">
                 <span>Neural Downscaled (5km)</span>
                 <span className="text-blue-600 font-semibold">High-Res Peak</span>
@@ -238,7 +238,7 @@ export default function KeyMetricsPanel({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Extreme Preservation:</span>
-                  <span className="text-emerald-700 font-bold">
+                  <span className="text-blue-700 font-bold">
                     {downscaled?.extreme_preservation_pct ?? 'N/A'}%
                   </span>
                 </div>

@@ -195,13 +195,13 @@ export default function EventDetail() {
           </div>
           <div>
             <span className="text-slate-400 block uppercase text-[10px]">Movement Vector</span>
-            <span className="text-amber-700 font-bold">
+            <span className="text-slate-800 font-bold">
               {eventDetail.movement_direction} @ {eventDetail.movement_speed_kmh} km/h
             </span>
           </div>
           <div>
             <span className="text-slate-400 block uppercase text-[10px]">Ensemble Consensus</span>
-            <span className="text-indigo-700 font-bold">
+            <span className="text-slate-800 font-bold">
               {Math.round(eventDetail.ensemble_agreement * 100)}% Agreement
             </span>
           </div>
@@ -230,12 +230,12 @@ export default function EventDetail() {
                 <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Rainfall Anomaly (EFI)
                   {primaryAnomaly?.key === 'rainfall' && (
-                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-blue-600 font-bold font-mono">{eventDetail.rainfall_efi.toFixed(2)}</span>
+                <span className="text-slate-800 font-bold font-mono">{eventDetail.rainfall_efi.toFixed(2)}</span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
@@ -251,16 +251,16 @@ export default function EventDetail() {
                 <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Temperature Anomaly (EFI)
                   {primaryAnomaly?.key === 'temperature' && (
-                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-red-600 font-bold font-mono">{eventDetail.temperature_efi.toFixed(2)}</span>
+                <span className="text-slate-800 font-bold font-mono">{eventDetail.temperature_efi.toFixed(2)}</span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-red-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${eventDetail.temperature_efi * 100}%` }}
                 ></div>
               </div>
@@ -272,16 +272,16 @@ export default function EventDetail() {
                 <span className="text-slate-700 font-semibold flex items-center gap-2">
                   Wind Speed Anomaly (EFI)
                   {primaryAnomaly?.key === 'wind' && (
-                    <span className="px-1.5 py-0.5 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] text-[10px] font-bold uppercase rounded">
+                    <span className="px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase rounded">
                       PRIMARY ANOMALY
                     </span>
                   )}
                 </span>
-                <span className="text-amber-700 font-bold font-mono">{eventDetail.wind_efi.toFixed(2)}</span>
+                <span className="text-slate-800 font-bold font-mono">{eventDetail.wind_efi.toFixed(2)}</span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${eventDetail.wind_efi * 100}%` }}
                 ></div>
               </div>
@@ -297,9 +297,9 @@ export default function EventDetail() {
               <span>Detection Narrative Summary</span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed font-sans">
-              System flagged this event due to a dominant <strong className="text-blue-800">{primaryAnomaly?.name}</strong> of{' '}
-              <strong className="text-blue-700 font-mono">{primaryAnomaly?.value}</strong>. Multi-model ensemble agreement is at{' '}
-              <strong className="text-indigo-700 font-mono">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, confirming high confidence in atmospheric instability over {eventDetail.location_name}.
+              System flagged this event due to a dominant <strong className="text-slate-900">{primaryAnomaly?.name}</strong> of{' '}
+              <strong className="text-slate-900">{primaryAnomaly?.value}</strong>. Multi-model ensemble agreement is at{' '}
+              <strong className="text-slate-900">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, confirming high confidence in atmospheric instability over {eventDetail.location_name}.
             </p>
           </div>
         </div>
@@ -309,7 +309,7 @@ export default function EventDetail() {
           <div className="space-y-3">
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
                 Tracking & Propagation Dynamics
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -351,7 +351,7 @@ export default function EventDetail() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
               Impact Summary & Downstream Intelligence
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -362,9 +362,7 @@ export default function EventDetail() {
           {eventRisk && (
             <div className="flex items-center space-x-3 text-xs font-mono">
               <span className="text-slate-500">Current Risk Snapshot:</span>
-              <span className="px-3 py-1 bg-[#FEE2E2] border border-[#FCA5A5] text-[#DC2626] rounded-md font-bold uppercase">
-                {eventRisk.overall_risk} Risk
-              </span>
+              <SeverityBadge severity={eventRisk.overall_risk} />
               <span className="text-slate-500">({eventRisk.impact_region_name})</span>
             </div>
           )}
@@ -374,7 +372,7 @@ export default function EventDetail() {
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Link
             to={`/events/${eventDetail.event_id}/forecast`}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-blue-600/30 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
             <span>View Localized Forecast</span>
             <span>→</span>
@@ -382,7 +380,7 @@ export default function EventDetail() {
 
           <Link
             to={`/events/${eventDetail.event_id}/risk`}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-350 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
             <span>View Risk Details</span>
             <span>→</span>

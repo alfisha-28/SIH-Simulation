@@ -44,7 +44,7 @@ export default class ErrorBoundary extends Component {
             <div className="pt-2 flex justify-center gap-4">
               <button
                 onClick={this.handleReset}
-                className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-lg shadow-cyan-600/30"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all"
               >
                 Return to Landing Overview
               </button>

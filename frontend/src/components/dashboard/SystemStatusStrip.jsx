@@ -40,9 +40,9 @@ export default function SystemStatusStrip({
 
       {/* Metrics Counters Strip */}
       <div className="flex items-center space-x-4 text-xs font-mono">
-        <div className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg space-y-0.5">
-          <span className="text-[10px] text-blue-500 uppercase block font-bold">Active Threats</span>
-          <span className="text-sm font-bold text-blue-700">{activeCount} Events</span>
+        <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg space-y-0.5">
+          <span className="text-[10px] text-slate-500 uppercase block font-bold">Active Threats</span>
+          <span className="text-sm font-bold text-slate-700">{activeCount} Events</span>
         </div>
 
         <div className="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg space-y-0.5">
@@ -50,9 +50,9 @@ export default function SystemStatusStrip({
           <span className="text-sm font-bold text-red-700">{severeCount} Critical</span>
         </div>
 
-        <div className="px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg space-y-0.5 hidden sm:block">
-          <span className="text-[10px] text-yellow-600 uppercase block font-bold font-semibold">Moderate</span>
-          <span className="text-sm font-bold text-yellow-700">{moderateCount} Events</span>
+        <div className="px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg space-y-0.5 hidden sm:block">
+          <span className="text-[10px] text-amber-600 uppercase block font-bold">Moderate</span>
+          <span className="text-sm font-bold text-amber-700">{moderateCount} Events</span>
         </div>
 
         {selectedEvent && (

@@ -2,11 +2,11 @@ export default function ConfidenceBadge({ confidence, className = '' }) {
   const getStyle = (conf) => {
     switch (conf?.toLowerCase()) {
       case 'high':
-        return 'bg-cyan-50 text-cyan-800 border-cyan-200';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'moderate':
-        return 'bg-blue-50 text-blue-800 border-blue-200';
-      default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
+      default:
+        return 'bg-slate-50 text-slate-500 border-slate-200';
     }
   };
 

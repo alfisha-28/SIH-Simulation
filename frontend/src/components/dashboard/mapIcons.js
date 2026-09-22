@@ -1,19 +1,19 @@
 import L from 'leaflet';
 
 export function createEventIcon(severity, isSelected = false) {
-  let bgClass = 'bg-emerald-500 border-emerald-300 shadow-emerald-500/50';
+  let bgClass = 'bg-emerald-500 border-emerald-200';
   let pulseColor = 'bg-emerald-400';
 
   if (severity === 'severe') {
-    bgClass = 'bg-red-500 border-red-200 shadow-red-500/50';
+    bgClass = 'bg-red-500 border-red-200';
     pulseColor = 'bg-red-500';
   } else if (severity === 'moderate') {
-    bgClass = 'bg-amber-500 border-amber-200 shadow-amber-500/50';
+    bgClass = 'bg-amber-500 border-amber-200';
     pulseColor = 'bg-amber-400';
   }
 
   const selectionRing = isSelected
-    ? 'ring-4 ring-cyan-400 ring-offset-2 ring-offset-slate-900 scale-125'
+    ? 'ring-4 ring-white ring-offset-2 ring-offset-slate-900 scale-125'
     : 'hover:scale-110';
 
   return L.divIcon({
@@ -35,8 +35,8 @@ export function createEventIcon(severity, isSelected = false) {
 
 export function createTrajectoryStepIcon(isCurrent = false) {
   const sizeClass = isCurrent
-    ? 'w-5 h-5 bg-cyan-400 border-2 border-white ring-4 ring-cyan-500/50 shadow-cyan-500/50 z-50'
-    : 'w-3 h-3 bg-cyan-500 border border-cyan-200 opacity-80';
+    ? 'w-5 h-5 bg-blue-400 border-2 border-white ring-4 ring-blue-400/40 z-50'
+    : 'w-3 h-3 bg-blue-400 border border-blue-200 opacity-80';
 
   return L.divIcon({
     className: 'custom-leaflet-marker',
