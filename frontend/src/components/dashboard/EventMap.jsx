@@ -131,25 +131,25 @@ export default function EventMap({
             >
               <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
                 <div className="text-xs space-y-1">
-                  <div className="font-bold uppercase tracking-wider text-slate-200">
+                  <div className="font-bold uppercase tracking-wider text-slate-900">
                     {evt.event_id} — {evt.location_name || 'Unknown Location'}
                   </div>
-                  <div className="capitalize text-slate-300">
+                  <div className="capitalize text-slate-600">
                     {(evt.type || '').replace('_', ' ')}
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[11px] pt-1 border-t border-slate-700">
+                  <div className="flex items-center justify-between gap-3 text-[11px] pt-1 border-t border-slate-200">
                     <span
                       className={`font-semibold uppercase ${
                         evt.severity === 'severe'
-                          ? 'text-red-400'
+                          ? 'text-red-600'
                           : evt.severity === 'moderate'
-                          ? 'text-amber-400'
-                          : 'text-emerald-400'
+                          ? 'text-amber-600'
+                          : 'text-emerald-600'
                       }`}
                     >
                       {evt.severity || 'info'}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-slate-500">
                       {Math.round((evt.probability || 0) * 100)}% prob
                     </span>
                   </div>
@@ -164,7 +164,7 @@ export default function EventMap({
           <Polyline
             positions={trajectoryPositions}
             pathOptions={{
-              color: '#06b6d4',
+              color: '#60a5fa',
               weight: 3,
               dashArray: '6, 6',
               opacity: 0.85,
@@ -184,7 +184,7 @@ export default function EventMap({
               icon={createTrajectoryStepIcon(isCurrent)}
             >
               <Tooltip direction="bottom" offset={[0, 10]} opacity={0.9}>
-                <div className="text-[11px] font-mono text-cyan-300">
+                <div className="text-[11px] font-mono text-slate-700">
                   {step.timestep_label || `Step ${idx}`} (Offset: {step.timestep_hours_offset ?? 0}h)
                 </div>
               </Tooltip>
@@ -198,9 +198,9 @@ export default function EventMap({
             center={currentStepPos}
             radius={currentStep.uncertainty_radius_km * 1000}
             pathOptions={{
-              color: '#06b6d4',
-              fillColor: '#0891b2',
-              fillOpacity: 0.18,
+              color: '#60a5fa',
+              fillColor: '#60a5fa',
+              fillOpacity: 0.15,
               weight: 1.5,
               dashArray: '4, 4',
             }}
@@ -212,10 +212,10 @@ export default function EventMap({
           <Rectangle
             bounds={bboxBounds}
             pathOptions={{
-              color: '#f43f5e',
-              fillColor: '#f43f5e',
-              fillOpacity: 0.1,
-              weight: 2,
+              color: '#cbd5e1',
+              fillColor: '#cbd5e1',
+              fillOpacity: 0.05,
+              weight: 1.5,
             }}
           />
         )}

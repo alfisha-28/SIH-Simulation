@@ -91,9 +91,7 @@ export default function Landing() {
         </div>
         <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
           AI-Powered Extreme <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            WARSHA Dashboard
-          </span>
+          <span className="text-blue-600">WARSHA Dashboard</span>
         </h1>
         <p className="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed">
           Real-time global anomaly detection, graph neural network trajectory tracking, and physics-validated conditional diffusion downscaling for extreme atmospheric hazards.
@@ -111,11 +109,7 @@ export default function Landing() {
         {/* 5-Line Philosophy Headline */}
         <div className="text-center sm:text-left">
           <p className="text-xl sm:text-2xl font-bold font-mono text-slate-800 tracking-wide leading-relaxed">
-            <span className="text-blue-600">Detect globally.</span>{' '}
-            <span className="text-indigo-600">Track intelligently.</span>{' '}
-            <span className="text-violet-600">Downscale selectively.</span>{' '}
-            <span className="text-emerald-600">Validate physically.</span>{' '}
-            <span className="text-amber-600">Alert locally.</span>
+            Detect globally. Track intelligently. Downscale selectively. Validate physically. Alert locally.
           </p>
         </div>
 
@@ -145,12 +139,12 @@ export default function Landing() {
             <span className="text-xs font-mono text-slate-500 uppercase tracking-wider block">
               Active Events
             </span>
-            <span className="text-3xl font-extrabold font-mono text-blue-600 mt-1 block">
+            <span className="text-3xl font-extrabold font-mono text-slate-900 mt-1 block">
               {loading ? '...' : activeEventsCount}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">Live anomaly instances</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-mono font-bold">
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
             ⚡
           </div>
         </div>
@@ -166,7 +160,7 @@ export default function Landing() {
             </span>
             <span className="text-[11px] text-slate-400 font-mono">Severe severity zones</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-mono font-bold">
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
             ⚠
           </div>
         </div>
@@ -182,14 +176,14 @@ export default function Landing() {
             </span>
             <span className="text-[11px] text-slate-400 font-mono">FastAPI backend link</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-mono font-bold">
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
             ✓
           </div>
         </div>
       </div>
 
       {/* Primary CTA Section */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 sm:p-8 rounded-2xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-white border border-[#D9E4EE] p-6 sm:p-8 rounded-2xl shadow-sm">
         <div className="space-y-1 text-center sm:text-left">
           <h2 className="text-lg font-bold text-slate-800 uppercase tracking-wider font-mono">
             Ready to explore live atmospheric intelligence?
@@ -201,7 +195,7 @@ export default function Landing() {
 
         <Link
           to="/dashboard"
-          className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-3 whitespace-nowrap cursor-pointer"
+          className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-mono text-sm font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-3 whitespace-nowrap cursor-pointer"
         >
           <span>Open Live Dashboard</span>
           <span className="text-lg">→</span>

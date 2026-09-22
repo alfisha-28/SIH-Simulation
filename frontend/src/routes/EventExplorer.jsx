@@ -116,7 +116,7 @@ export default function EventExplorer() {
             Total Detected: <strong className="text-blue-600">{events.length}</strong>
           </span>
           <span className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
-            Showing: <strong className="text-blue-500">{sortedEvents.length}</strong>
+            Showing: <strong className="text-blue-600">{sortedEvents.length}</strong>
           </span>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function EventExplorer() {
               placeholder="ID, location, threat..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-350 rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
             />
           </div>
 
@@ -159,7 +159,7 @@ export default function EventExplorer() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-350 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
             >
               <option value="all">All Types</option>
               <option value="extreme_rainfall">Extreme Rainfall</option>
@@ -174,7 +174,7 @@ export default function EventExplorer() {
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-350 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
             >
               <option value="all">All Severities</option>
               <option value="severe">Severe</option>
@@ -189,7 +189,7 @@ export default function EventExplorer() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-350 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
@@ -204,7 +204,7 @@ export default function EventExplorer() {
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-350 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
             >
               <option value="all">All Available</option>
               <option value="24h">Last 24 Hours</option>

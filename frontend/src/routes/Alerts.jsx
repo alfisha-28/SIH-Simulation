@@ -8,7 +8,7 @@ const EventTypeIcon = ({ type }) => {
   const t = (type || '').toLowerCase();
   if (t.includes('rain') || t.includes('flood') || t.includes('storm')) {
     return (
-      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 shadow-2xs">
+      <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 flex items-center justify-center shrink-0">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
         </svg>
@@ -17,7 +17,7 @@ const EventTypeIcon = ({ type }) => {
   }
   if (t.includes('heat') || t.includes('fire') || t.includes('sun')) {
     return (
-      <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0 shadow-2xs">
+      <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 flex items-center justify-center shrink-0">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25M4.284 12h-2.25m15.364 6.364l-1.591-1.591M6.759 6.759L5.168 5.168m12.728 0l-1.591 1.591M6.759 17.241l-1.591 1.591M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z" />
         </svg>
@@ -26,7 +26,7 @@ const EventTypeIcon = ({ type }) => {
   }
   if (t.includes('wind') || t.includes('cyclone') || t.includes('gale')) {
     return (
-      <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center shrink-0 shadow-2xs">
+      <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 flex items-center justify-center shrink-0">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 19.5v-.75a1.5 1.5 0 00-1.5-1.5H3m14.25-4.5h-15.75m18-4.5h-16.5m18.75 0a2.25 2.25 0 100-4.5h-1.5" />
         </svg>
@@ -34,7 +34,7 @@ const EventTypeIcon = ({ type }) => {
     );
   }
   return (
-    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0 shadow-2xs">
+    <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 flex items-center justify-center shrink-0">
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
       </svg>
@@ -72,11 +72,11 @@ export default function Alerts() {
     if (sev === 'severe' || sev === 'high') {
       return {
         level: 'SEVERE ALERT',
-        badgeBg: 'bg-rose-50 border-rose-200 text-rose-700',
-        dotBg: 'bg-rose-500',
-        pingBg: 'bg-rose-400',
-        barGradient: 'from-rose-500 to-red-600',
-        probBadge: 'bg-rose-100 text-rose-800',
+        badgeBg: 'bg-red-50 border-red-200 text-red-700',
+        dotBg: 'bg-red-500',
+        pingBg: 'bg-red-400',
+        barColor: 'bg-red-500',
+        probBadge: 'bg-red-50 text-red-700',
         label: 'Extreme weather threat detected'
       };
     } else if (sev === 'moderate' || sev === 'warning') {
@@ -85,8 +85,8 @@ export default function Alerts() {
         badgeBg: 'bg-amber-50 border-amber-200 text-amber-800',
         dotBg: 'bg-amber-500',
         pingBg: 'bg-amber-400',
-        barGradient: 'from-amber-400 to-orange-500',
-        probBadge: 'bg-amber-100 text-amber-800',
+        barColor: 'bg-amber-500',
+        probBadge: 'bg-amber-50 text-amber-700',
         label: 'Heavy weather activity or heightened risk expected'
       };
     } else {
@@ -95,8 +95,8 @@ export default function Alerts() {
         badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
         dotBg: 'bg-emerald-500',
         pingBg: 'bg-emerald-400',
-        barGradient: 'from-emerald-400 to-teal-500',
-        probBadge: 'bg-emerald-100 text-emerald-800',
+        barColor: 'bg-emerald-500',
+        probBadge: 'bg-emerald-50 text-emerald-700',
         label: 'No immediate severe weather hazard reported'
       };
     }
@@ -141,8 +141,8 @@ export default function Alerts() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-              <span className="text-xs font-mono font-bold tracking-widest text-rose-600 uppercase">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+              <span className="text-xs font-mono font-bold tracking-widest text-red-600 uppercase">
                 Emergency Alert Center
               </span>
             </div>
@@ -153,17 +153,17 @@ export default function Alerts() {
 
           {/* Quick Counter Pills */}
           <div className="flex items-center space-x-2 text-xs">
-            <div className="px-3.5 py-1.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-semibold flex items-center gap-2 shadow-2xs">
+            <div className="px-3.5 py-1.5 bg-red-50 border border-red-200 rounded-xl text-red-700 font-semibold flex items-center gap-2 shadow-2xs">
               <span className="text-[11px] uppercase tracking-wider font-mono">Critical:</span>
-              <span className="text-white bg-rose-600 px-2 py-0.5 rounded-md text-xs font-mono font-bold">{criticalCount}</span>
+              <span className="text-xs font-mono font-bold">{criticalCount}</span>
             </div>
             <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 font-semibold flex items-center gap-2 shadow-2xs">
               <span className="text-[11px] uppercase tracking-wider font-mono">High:</span>
-              <span className="text-white bg-amber-600 px-2 py-0.5 rounded-md text-xs font-mono font-bold">{highCount}</span>
+              <span className="text-xs font-mono font-bold">{highCount}</span>
             </div>
             <div className="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 font-semibold flex items-center gap-2 shadow-2xs">
               <span className="text-[11px] uppercase tracking-wider font-mono">Advisory:</span>
-              <span className="text-white bg-emerald-600 px-2 py-0.5 rounded-md text-xs font-mono font-bold">{advisoryCount}</span>
+              <span className="text-xs font-mono font-bold">{advisoryCount}</span>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function Alerts() {
 
       {/* Error State */}
       {error && (
-        <div className="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-mono">
+        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-mono">
           {error}
         </div>
       )}
@@ -234,7 +234,7 @@ export default function Alerts() {
             return (
               <div
                 key={event.event_id}
-                className="bg-white border border-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between space-y-5 group"
+                className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between space-y-5 group"
               >
                 {/* Card Header: Level Badge & Event ID */}
                 <div className="space-y-4">
@@ -262,7 +262,7 @@ export default function Alerts() {
                         {formatEventType(event.type)}
                       </h2>
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/60">
-                        <svg className="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                         </svg>
@@ -289,7 +289,7 @@ export default function Alerts() {
                     </div>
                     <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${config.barGradient} transition-all duration-500 shadow-xs`}
+                        className={`h-full rounded-full ${config.barColor} transition-all duration-500`}
                         style={{ width: `${probPct}%` }}
                       ></div>
                     </div>
@@ -327,7 +327,7 @@ export default function Alerts() {
                   <Link
                     to={`/events/${event.event_id}`}
                     onClick={() => localStorage.setItem('lastActiveEventId', event.event_id)}
-                    className="w-full py-2.5 px-4 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:shadow-blue-500/20 group-hover:bg-blue-600"
+                    className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
                   >
                     <span>View Event Intelligence</span>
                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

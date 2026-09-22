@@ -31,9 +31,8 @@ export default function TimelineSlider({
   const getRiskBadgeColor = (risk) => {
     switch (risk?.toLowerCase()) {
       case 'severe':
-        return 'bg-red-50 text-red-700 border-red-200';
       case 'high':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'moderate':
         return 'bg-amber-50 text-amber-700 border-amber-200';
       default:
@@ -50,8 +49,8 @@ export default function TimelineSlider({
             onClick={() => setIsPlaying(!isPlaying)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               isPlaying
-                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100/80'
-                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm shadow-blue-600/10'
+                ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm'
             }`}
           >
             {isPlaying ? (

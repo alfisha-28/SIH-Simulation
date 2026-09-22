@@ -37,7 +37,7 @@ export default function Navbar() {
     { path: `/events/${currentEventId}/risk`, label: 'Event Risk', end: true },
     { 
       path: '/alerts', 
-      label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}] 🔴` : 'Alerts',
+      label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}]` : 'Alerts',
       hasAlert: severeAlertsCount > 0
     },
     { path: '/system', label: 'System Info' },

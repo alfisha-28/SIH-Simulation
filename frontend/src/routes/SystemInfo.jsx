@@ -57,7 +57,7 @@ export default function SystemInfo() {
           </div>
 
           {/* Dynamic Backend Status Badge */}
-          <div className="flex items-center space-x-2 text-xs font-mono bg-slate-50 px-3 py-2 rounded-xl border border-slate-205">
+          <div className="flex items-center space-x-2 text-xs font-mono bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
             <span className="text-slate-600">Backend Status:</span>
             {loading ? (
               <span className="text-amber-700 font-semibold">checking...</span>
@@ -72,7 +72,7 @@ export default function SystemInfo() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-650 max-w-3xl leading-relaxed">
+        <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
           Comprehensive overview of the end-to-end processing pipeline, model components, data sources, and system design underlying the WARSHA Command Center.
         </p>
       </div>
@@ -85,7 +85,7 @@ export default function SystemInfo() {
               <span className="w-2 h-2 rounded-full bg-blue-600"></span>
               End-to-End Processing Pipeline (9 Stages)
             </h2>
-            <p className="text-xs text-slate-550">
+            <p className="text-xs text-slate-500">
               Sequential flow from raw ensemble inputs to downscaled risk visualization.
             </p>
           </div>
@@ -98,9 +98,9 @@ export default function SystemInfo() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-9 gap-2 relative">
           {pipelineSteps.map((step, idx) => (
             <div key={step.id} className="flex flex-col h-full">
-              <div className="bg-slate-50 border border-slate-205 p-3 rounded-xl flex-1 space-y-2 hover:border-blue-400 transition-colors group">
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex-1 space-y-2 hover:border-blue-400 transition-colors group">
                 <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
-                  <span className="text-blue-650 font-bold group-hover:text-blue-750">
+                  <span className="text-slate-500 font-bold group-hover:text-blue-700">
                     STAGE {step.id}
                   </span>
                   {idx < pipelineSteps.length - 1 && (
@@ -111,11 +111,11 @@ export default function SystemInfo() {
                   <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-800">
                     {step.name}
                   </h3>
-                  <p className="text-[10px] font-mono text-blue-700 font-medium mt-0.5">
+                  <p className="text-[10px] font-mono text-slate-500 font-medium mt-0.5">
                     {step.role}
                   </p>
                 </div>
-                <p className="text-[10px] text-slate-550 leading-tight pt-1 border-t border-slate-200">
+                <p className="text-[10px] text-slate-500 leading-tight pt-1 border-t border-slate-200">
                   {step.detail}
                 </p>
               </div>
@@ -135,10 +135,10 @@ export default function SystemInfo() {
         <div className="lg:col-span-2 bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-4">
           <div className="border-b border-slate-100 pb-3">
             <h2 className="text-sm font-bold uppercase font-mono tracking-wider text-slate-900 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
               Core System Components & Models
             </h2>
-            <p className="text-xs text-slate-550 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Technical specification summary for models, baseline datasets, and backend infrastructure.
             </p>
           </div>
@@ -147,12 +147,12 @@ export default function SystemInfo() {
             {components.map((comp, idx) => (
               <div
                 key={idx}
-                className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-1 hover:border-slate-350 transition-colors"
+                className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-1 hover:border-slate-300 transition-colors"
               >
                 <span className="text-[10px] font-mono uppercase text-slate-500 tracking-wider block">
                   {comp.label}
                 </span>
-                <span className="text-sm font-bold font-mono text-blue-600 block">
+                <span className="text-sm font-bold font-mono text-slate-900 block">
                   {comp.value}
                 </span>
                 <span className="text-[11px] text-slate-600 block pt-0.5">
@@ -164,15 +164,14 @@ export default function SystemInfo() {
         </div>
 
         {/* Honest Framing Note Box (1 Col) */}
-        <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
+        <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="flex items-center space-x-2 border-b border-slate-105 pb-3">
-              <span className="text-amber-500 font-bold">ℹ️</span>
-              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-700">
+            <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
+              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">
                 Architecture & Simulation Note
               </h2>
             </div>
-            <div className="space-y-3 text-xs text-slate-650 leading-relaxed font-sans">
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed font-sans">
               <p>
                 This operational prototype simulates the multi-stage pipeline using structured, physically consistent data derived from ensemble modeling patterns.
               </p>
