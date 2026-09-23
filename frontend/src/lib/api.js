@@ -1,6 +1,5 @@
 export const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
-const DEFAULT_TIMEOUT_MS = 12000;
 const CACHE_TTL_MS = 30000;
 
 // url -> { promise, ts }. Lets several components that mount at once (Navbar, Landing,
@@ -9,28 +8,21 @@ const CACHE_TTL_MS = 30000;
 const requestCache = new Map();
 
 // A single error type for every failure apiGet can throw, so callers can tell a dead network
-// apart from a real HTTP status or a timeout while still reading `.message` like a plain Error.
+// apart from a real HTTP status while still reading `.message` like a plain Error.
 export class ApiError extends Error {
-  constructor(message, { status = null, isTimeout = false, isNetworkError = false } = {}) {
+  constructor(message, { status = null, isNetworkError = false } = {}) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
-    this.isTimeout = isTimeout;
     this.isNetworkError = isNetworkError;
   }
 }
 
-async function fetchJson(url, requestSignal) {
+async function fetchJson(url) {
   let response;
   try {
-    response = await fetch(url, { signal: requestSignal });
+    response = await fetch(url);
   } catch (err) {
-    // The fetch is only ever governed by the timeout signal now (a caller's own signal
-    // is applied to the returned promise instead, see withCallerAbort), so any abort
-    // reaching here is the 12s timeout, not a caller cancellation.
-    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-      throw new ApiError('Server is taking too long to respond.', { isTimeout: true });
-    }
     throw new ApiError(`Could not reach the server (${err.message}).`, { isNetworkError: true });
   }
   if (!response.ok) {
@@ -69,8 +61,7 @@ export async function apiGet(path, { signal, fresh = false } = {}) {
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
-  const promise = fetchJson(url, timeoutSignal);
+  const promise = fetchJson(url);
 
   // Always record the request, including a `fresh` refresh, so every other component
   // sharing this URL is served the new response instead of a stale one for the rest of
