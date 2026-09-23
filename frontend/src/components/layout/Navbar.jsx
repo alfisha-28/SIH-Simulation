@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { apiGet } from '../../lib/api';
 
 export default function Navbar() {
   const location = useLocation();
-  const match = location.pathname.match(/\/events\/([^/]+)/);
-  const pathEventId = match ? match[1] : null;
+  const navRef = useRef(null);
 
   const [events, setEvents] = useState([]);
   useEffect(() => {
@@ -18,25 +17,20 @@ export default function Navbar() {
       .catch((err) => console.error('Navbar error fetching alerts:', err));
   }, []);
 
-  // Store the active event ID in localStorage when visited via URL
+  // Keep the active link visible when the nav scrolls horizontally on narrow screens
   useEffect(() => {
-    if (pathEventId) {
-      localStorage.setItem('lastActiveEventId', pathEventId);
-    }
-  }, [pathEventId]);
+    const activeEl = navRef.current?.querySelector('[aria-current="page"]');
+    activeEl?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [location.pathname]);
 
-  const currentEventId = pathEventId || localStorage.getItem('lastActiveEventId') || events[0]?.event_id || 'EVT-2026-001';
   const severeAlertsCount = events.filter((e) => e.severity?.toLowerCase() === 'severe').length;
 
   const navItems = [
     { path: '/', label: 'Overview', end: true },
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/events', label: 'Events Explorer', end: true },
-    { path: `/events/${currentEventId}`, label: 'Event Detail', end: true },
-    { path: `/events/${currentEventId}/forecast`, label: 'Event Forecast', end: true },
-    { path: `/events/${currentEventId}/risk`, label: 'Event Risk', end: true },
-    { 
-      path: '/alerts', 
+    {
+      path: '/alerts',
       label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}]` : 'Alerts',
       hasAlert: severeAlertsCount > 0
     },
@@ -47,14 +41,14 @@ export default function Navbar() {
     <header className="border-b border-[#D9E4EE] bg-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          <div className="flex items-center space-x-2">
-            <img src="/logo.jpg" alt="WARSHA Logo" className="h-7 w-auto object-contain rounded-md shadow-sm" />
+          <Link to="/" aria-label="WARSHA home" className="flex items-center space-x-2 shrink-0 mr-3">
+            <img src="/logo.jpg" alt="" className="h-7 w-auto object-contain rounded-md shadow-sm" />
             <span className="font-extrabold tracking-wider text-slate-900 uppercase text-xs">
               WARSHA
             </span>
-          </div>
+          </Link>
 
-          <nav className="flex space-x-1 overflow-x-auto py-2">
+          <nav ref={navRef} className="flex space-x-1 overflow-x-auto py-2 min-w-0">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
