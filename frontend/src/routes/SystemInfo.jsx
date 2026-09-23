@@ -31,12 +31,12 @@ export default function SystemInfo() {
   ];
 
   const components = [
-    { label: 'Forecast Source', value: 'NEPS-G Ensemble', desc: '12km NWP Ensemble Forecast System' },
+    { label: 'Forecast Source', value: 'NEPS-G Ensemble (12km)', desc: '12km NWP Ensemble Forecast System' },
     { label: 'Historical Baseline', value: 'ERA5 / IMDAA', desc: '20-year atmospheric climatology' },
     { label: 'Tracking Model', value: 'Spatio-Temporal GNN', desc: 'Graph neural network for trajectory prediction' },
-    { label: 'Downscaling Model', value: 'Conditional Diffusion', desc: 'Generative super-resolution (12km → 5km)' },
+    { label: 'Downscaling Model', value: 'Conditional Diffusion (12km to 5km)', desc: 'Generative super-resolution (12km → 5km)' },
     { label: 'Validation Engine', value: 'Physics-Informed Bounds', desc: 'Mass and energy conservation verification' },
-    { label: 'Backend Architecture', value: 'FastAPI (Python)', desc: 'Asynchronous SQLite/REST intelligence server' },
+    { label: 'Backend Architecture', value: 'FastAPI (Python)', desc: 'SQLite or Postgres REST intelligence server' },
   ];
 
   return (
@@ -64,10 +64,10 @@ export default function SystemInfo() {
             ) : health ? (
               <span className="text-emerald-700 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                FastAPI — {health.status.toUpperCase()}
+                FastAPI: {health.status.toUpperCase()}
               </span>
             ) : (
-              <span className="text-slate-500">FastAPI — Standby</span>
+              <span className="text-slate-500">FastAPI: Offline</span>
             )}
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function SystemInfo() {
 
       {/* Section 1: End-to-End Pipeline Diagram */}
       <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <h2 className="text-base font-bold font-mono text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-600"></span>
@@ -89,7 +89,7 @@ export default function SystemInfo() {
               Sequential flow from raw ensemble inputs to downscaled risk visualization.
             </p>
           </div>
-          <span className="text-xs font-mono text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200">
+          <span className="text-xs font-mono text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 whitespace-nowrap shrink-0">
             NEPS-G → Dashboard
           </span>
         </div>
@@ -104,7 +104,13 @@ export default function SystemInfo() {
                     STAGE {step.id}
                   </span>
                   {idx < pipelineSteps.length - 1 && (
-                    <span className="hidden lg:inline text-slate-400 font-bold">→</span>
+                    <span
+                      className={`${
+                        idx % 3 === 2 ? 'hidden lg:inline' : 'hidden md:inline'
+                      } text-slate-400 font-bold`}
+                    >
+                      →
+                    </span>
                   )}
                 </div>
                 <div>
@@ -122,7 +128,7 @@ export default function SystemInfo() {
 
               {/* Mobile/Tablet Arrow Indicator */}
               {idx < pipelineSteps.length - 1 && (
-                <div className="lg:hidden text-center text-slate-400 text-xs py-1">↓</div>
+                <div className="md:hidden text-center text-slate-400 text-xs py-1">↓</div>
               )}
             </div>
           ))}
@@ -181,8 +187,11 @@ export default function SystemInfo() {
             </div>
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] font-mono text-blue-700">
-            ✓ Modular ML Integration Ready
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] font-mono text-blue-700 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Modular ML Integration Ready
           </div>
         </div>
       </div>
