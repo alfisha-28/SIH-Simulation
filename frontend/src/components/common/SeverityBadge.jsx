@@ -1,30 +1,13 @@
-export default function SeverityBadge({ severity, className = '' }) {
-  const getStyle = (sev) => {
-    switch (sev?.toLowerCase()) {
-      case 'severe':
-      case 'high':
-      case 'critical':
-      case 'alert':
-        return 'bg-red-50 text-red-700 border-red-200';
-      case 'moderate':
-      case 'warning':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'low':
-      case 'safe':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      default:
-        return 'bg-slate-100 text-slate-600 border-slate-200';
-    }
-  };
+import { getSeverityStyle, getSeverityLabel, badgeClassName, SIZES } from '../../lib/severity';
 
+// `size` ('sm' | 'md' | 'lg') covers callers that want a named chip size;
+// `className` still accepts a raw utility override on top of it. Both
+// resolve through badgeClassName() so neither loses to the base classes.
+export default function SeverityBadge({ severity, suffix = '', size = 'sm', className = '' }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide border font-mono ${getStyle(
-        severity
-      )} ${className}`}
-    >
-      <span className="w-[0.45em] h-[0.45em] rounded-full bg-current"></span>
-      <span>{severity || 'UNKNOWN'}</span>
+    <span className={`${badgeClassName(`${SIZES[size] || SIZES.sm} ${className}`)} ${getSeverityStyle(severity)}`}>
+      <span className="w-[0.45em] h-[0.45em] rounded-full bg-current" aria-hidden="true"></span>
+      <span>{getSeverityLabel(severity, suffix)}</span>
     </span>
   );
 }

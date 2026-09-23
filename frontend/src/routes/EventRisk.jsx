@@ -1,86 +1,105 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import SeverityBadge from '../components/common/SeverityBadge';
+import ErrorState from '../components/common/ErrorState';
 import TimelineSlider from '../components/common/TimelineSlider';
+import { formatEventType, formatTimestampUTC } from '../lib/format';
 
 export default function EventRisk() {
   const { eventId } = useParams();
   const [eventDetail, setEventDetail] = useState(null);
   const [forecastTimeline, setForecastTimeline] = useState([]);
+  const [forecastUnavailable, setForecastUnavailable] = useState(false);
   const [riskData, setRiskData] = useState(null);
   const [selectedTimestepIndex, setSelectedTimestepIndex] = useState(0);
-  
+  const selectedTimestepIndexRef = useRef(0);
+
   const [loading, setLoading] = useState(true);
   const [loadingRisk, setLoadingRisk] = useState(false);
+  const [riskFetchError, setRiskFetchError] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
-  // Sync eventId to localStorage on mount
   useEffect(() => {
-    if (eventId) {
-      localStorage.setItem('lastActiveEventId', eventId);
-    }
-  }, [eventId]);
+    selectedTimestepIndexRef.current = selectedTimestepIndex;
+  }, [selectedTimestepIndex]);
 
   // Initial load: Fetch event detail, forecast timeline, and initial risk snapshot
-  useEffect(() => {
-    async function loadInitialData() {
-      setLoading(true);
-      setNotFound(false);
-      setError(null);
-      try {
-        const [detailRes, forecastRes, riskRes] = await Promise.all([
-          apiGet(`/events/${eventId}`).catch(() => null),
-          apiGet(`/events/${eventId}/forecast`).catch(() => null),
-          apiGet(`/events/${eventId}/risk`),
-        ]);
+  const loadInitialData = useCallback(async () => {
+    setLoading(true);
+    setNotFound(false);
+    setError(null);
+    setRiskFetchError(null);
+    try {
+      const [detailRes, forecastRes, riskRes] = await Promise.all([
+        apiGet(`/events/${eventId}`).catch(() => null),
+        apiGet(`/events/${eventId}/forecast`).catch(() => null),
+        apiGet(`/events/${eventId}/risk`),
+      ]);
 
-        if (!riskRes) {
-          setNotFound(true);
-          return;
+      if (!riskRes) {
+        setNotFound(true);
+        // Event does not exist: don't leave a stale nav shortcut pointing at it
+        try {
+          if (localStorage.getItem('lastActiveEventId') === eventId) {
+            localStorage.removeItem('lastActiveEventId');
+          }
+        } catch {
+          // storage may be blocked (private mode); non-fatal
         }
-
-        setEventDetail(detailRes);
-        if (forecastRes?.timeline) {
-          setForecastTimeline(forecastRes.timeline);
-        } else {
-          // Fallback static timeline if forecast timeline unavailable
-          setForecastTimeline([
-            { timestep_label: 'NOW', timestep_hours_offset: 0, probability: detailRes?.probability || 0.8 },
-            { timestep_label: '+6h', timestep_hours_offset: 6, probability: 0.82 },
-            { timestep_label: '+12h', timestep_hours_offset: 12, probability: 0.85 },
-            { timestep_label: '+18h', timestep_hours_offset: 18, probability: 0.88 },
-            { timestep_label: '+24h', timestep_hours_offset: 24, probability: 0.75 },
-            { timestep_label: '+48h', timestep_hours_offset: 48, probability: 0.5 },
-          ]);
-        }
-        setRiskData(riskRes);
-        setSelectedTimestepIndex(0);
-      } catch (err) {
-        console.error(`Error loading risk assessment for event ${eventId}:`, err);
-        if (err.message && err.message.includes('404')) {
-          setNotFound(true);
-        } else {
-          setError(`Failed to load impact and risk assessment for ${eventId}: ${err.message}`);
-        }
-      } finally {
-        setLoading(false);
+        return;
       }
-    }
 
-    if (eventId) {
-      loadInitialData();
+      // Event is confirmed to exist, safe to remember as the last active one
+      try {
+        localStorage.setItem('lastActiveEventId', eventId);
+      } catch {
+        // storage may be blocked (private mode); non-fatal
+      }
+
+      setEventDetail(detailRes);
+      if (forecastRes?.timeline?.length) {
+        setForecastTimeline(forecastRes.timeline);
+        setForecastUnavailable(false);
+      } else {
+        // Forecast is genuinely unavailable; show an honest empty state
+        // instead of inventing a probability timeline.
+        setForecastTimeline([]);
+        setForecastUnavailable(true);
+      }
+      setRiskData(riskRes);
+      setSelectedTimestepIndex(0);
+    } catch (err) {
+      console.error(`Error loading risk assessment for event ${eventId}:`, err);
+      if (err.message && err.message.includes('404')) {
+        setNotFound(true);
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   }, [eventId]);
 
+  useEffect(() => {
+    async function init() {
+      if (eventId) {
+        await loadInitialData();
+      }
+    }
+    init();
+  }, [eventId, loadInitialData]);
+
   // Timestep selection refetch handler for GET /events/{eventId}/risk?timestep={label}
-  const handleSelectTimestep = async (index) => {
-    setSelectedTimestepIndex(index);
+  const handleSelectTimestep = useCallback(async (index) => {
     const targetStep = forecastTimeline[index];
     if (!targetStep?.timestep_label) return;
 
+    const previousIndex = selectedTimestepIndexRef.current;
+    setSelectedTimestepIndex(index);
     setLoadingRisk(true);
+    setRiskFetchError(null);
     try {
       // Encode label to handle leading '+'
       const labelQuery = encodeURIComponent(targetStep.timestep_label);
@@ -88,24 +107,14 @@ export default function EventRisk() {
       setRiskData(updatedRisk);
     } catch (err) {
       console.error(`Failed to fetch risk for timestep ${targetStep.timestep_label}:`, err);
+      // Roll the selection back so the label never claims a horizon the
+      // displayed risk numbers do not belong to.
+      setSelectedTimestepIndex(previousIndex);
+      setRiskFetchError(`Could not update risk for ${targetStep.timestep_label}.`);
     } finally {
       setLoadingRisk(false);
     }
-  };
-
-  const formatEventType = (type) => {
-    return (type || '').replace('_', ' ').toUpperCase();
-  };
-
-  const formatDate = (isoString) => {
-    if (!isoString) return 'N/A';
-    try {
-      const date = new Date(isoString);
-      return date.toUTCString().replace(' GMT', ' UTC');
-    } catch {
-      return isoString;
-    }
-  };
+  }, [eventId, forecastTimeline]);
 
   // Render 404 / Not Found state
   if (notFound) {
@@ -146,10 +155,12 @@ export default function EventRisk() {
   // Render Error state
   if (error || !riskData) {
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
-          {error || 'Failed to load risk assessment.'}
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-4">
+        <ErrorState
+          message="Can't load the impact and risk assessment for this event."
+          detail={error}
+          onRetry={loadInitialData}
+        />
         <Link to="/events" className="text-xs text-blue-600 hover:underline">
           ← Back to Events
         </Link>
@@ -157,7 +168,10 @@ export default function EventRisk() {
     );
   }
 
-  const currentStepLabel = forecastTimeline[selectedTimestepIndex]?.timestep_label || riskData.timestep_label;
+  // Drive every label from the risk data actually on screen, not from
+  // whichever step the slider happens to be sitting on mid fetch.
+  const currentStepLabel =
+    riskData.timestep_label || forecastTimeline[selectedTimestepIndex]?.timestep_label || 'Unknown';
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-slate-800">
@@ -195,8 +209,8 @@ export default function EventRisk() {
       <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
-            <div className="flex items-center space-x-3">
-              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded whitespace-nowrap">
                 {eventId}
               </span>
               <span className="text-xs text-slate-500 font-mono">
@@ -222,6 +236,18 @@ export default function EventRisk() {
         </p>
       </div>
 
+      {forecastUnavailable && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-mono text-amber-800">
+          <span>Forecast timeline unavailable, showing current risk only.</span>
+          <button
+            onClick={loadInitialData}
+            className="inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Shared Timestep Selector Component */}
       <TimelineSlider
         timeline={forecastTimeline}
@@ -241,38 +267,40 @@ export default function EventRisk() {
               </h2>
             </div>
 
-            {/* Large Prominent Overall Risk Display */}
-            <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-3 shadow-inner">
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">
-                Composite Risk Level
-              </span>
-
-              <div className="py-2">
-                <SeverityBadge
-                  severity={riskData.overall_risk}
-                  className="text-2xl px-6 py-2.5 shadow-sm tracking-widest"
-                />
-              </div>
-
-              <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-200">
-                Evaluating <span className="text-blue-600 font-bold">{currentStepLabel}</span> Forecast Horizon
-              </div>
-            </div>
-
-            {/* Spatial Footprint Metrics */}
-            <div className="space-y-3 font-mono text-xs text-slate-800">
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Impact Region Target</span>
-                <span className="text-sm font-bold text-slate-800 block">
-                  {riskData.impact_region_name}
+            <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-2 md:gap-4 lg:block lg:space-y-6">
+              {/* Large Prominent Overall Risk Display */}
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-3 shadow-inner">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">
+                  Composite Risk Level
                 </span>
+
+                <div className="py-2">
+                  <SeverityBadge
+                    severity={riskData.overall_risk}
+                    className="text-2xl px-6 py-2.5 shadow-sm tracking-widest"
+                  />
+                </div>
+
+                <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-200">
+                  Evaluating <span className="text-blue-600 font-bold">{currentStepLabel}</span> Forecast Horizon
+                </div>
               </div>
 
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Estimated Impact Radius</span>
-                <span className="text-lg font-bold text-blue-600">
-                  {riskData.impact_radius_km} km
-                </span>
+              {/* Spatial Footprint Metrics */}
+              <div className="space-y-3 font-mono text-xs text-slate-800">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase block">Impact Region Target</span>
+                  <span className="text-sm font-bold text-slate-800 block">
+                    {riskData.impact_region_name}
+                  </span>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase block">Estimated Impact Radius</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {riskData.impact_radius_km} km
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -298,6 +326,9 @@ export default function EventRisk() {
             {loadingRisk && (
               <span className="text-xs font-mono text-blue-600 animate-pulse">Refreshing...</span>
             )}
+            {!loadingRisk && riskFetchError && (
+              <span className="text-xs font-mono text-red-600">{riskFetchError}</span>
+            )}
           </div>
 
           {/* Risk Categories Table / Card List */}
@@ -308,7 +339,7 @@ export default function EventRisk() {
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white text-slate-500 border border-slate-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
                     </svg>
                   </div>
                   <div>
@@ -344,7 +375,7 @@ export default function EventRisk() {
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white text-slate-500 border border-slate-200 rounded-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12.75 19.5v-.75a1.5 1.5 0 00-1.5-1.5H3m14.25-4.5h-15.75m18-4.5h-16.5m18.75 0a2.25 2.25 0 100-4.5h-1.5" />
                     </svg>
                   </div>
                   <div>
@@ -431,7 +462,7 @@ export default function EventRisk() {
               1. Expected Onset / Start Time
             </span>
             <span className="text-sm font-bold text-slate-800 block">
-              {formatDate(riskData.expected_start)}
+              {formatTimestampUTC(riskData.expected_start)}
             </span>
             <span className="text-[10px] text-slate-500 block">
               Initial impact boundary
@@ -443,7 +474,7 @@ export default function EventRisk() {
               2. Peak Threat Window
             </span>
             <span className="text-sm font-bold text-amber-800 block">
-              {formatDate(riskData.peak_period)}
+              {formatTimestampUTC(riskData.peak_period)}
             </span>
             <span className="text-[10px] text-amber-600 block">
               Maximum intensity & hazard exposure
@@ -455,7 +486,7 @@ export default function EventRisk() {
               3. Expected Dissipation / End
             </span>
             <span className="text-sm font-bold text-slate-800 block">
-              {formatDate(riskData.expected_end)}
+              {formatTimestampUTC(riskData.expected_end)}
             </span>
             <span className="text-[10px] text-slate-500 block">
               System departure / recovery phase

@@ -1,3 +1,11 @@
+// Keys the intensity tile's label and unit off the event type so a wind or
+// heat event does not read out in rainfall units (finding F55).
+const INTENSITY_BY_TYPE = {
+  extreme_rainfall: { label: 'Forecast Intensity', unit: 'mm/24h' },
+  high_wind: { label: 'Peak Wind', unit: 'km/h' },
+  extreme_heat: { label: 'Max Temperature', unit: '°C' },
+};
+
 export default function KeyMetricsPanel({
   selectedEvent,
   selectedEventDetail,
@@ -24,6 +32,7 @@ export default function KeyMetricsPanel({
 
   const coarse = currentTimestep?.coarse || null;
   const downscaled = currentTimestep?.downscaled || null;
+  const intensityMeta = INTENSITY_BY_TYPE[selectedEvent.type] ?? INTENSITY_BY_TYPE.extreme_rainfall;
 
   const getRiskColor = (risk) => {
     switch (risk?.toLowerCase()) {
@@ -43,7 +52,7 @@ export default function KeyMetricsPanel({
 
   return (
     <div className="bg-white border border-[#D9E4EE] rounded-xl p-5 space-y-5 shadow-sm text-slate-800">
-      <div className="flex items-center justify-between border-b border-[#D9E4EE] pb-3">
+      <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#D9E4EE] pb-3">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
@@ -55,7 +64,7 @@ export default function KeyMetricsPanel({
           </p>
         </div>
         <div
-          className={`px-3 py-1 rounded-md text-xs font-bold uppercase border ${getRiskColor(
+          className={`px-3 py-1 rounded-md text-xs font-bold uppercase border whitespace-nowrap shrink-0 ${getRiskColor(
             stepRisk
           )}`}
         >
@@ -89,11 +98,11 @@ export default function KeyMetricsPanel({
         {/* Intensity Metric */}
         <div className="p-3.5 bg-slate-50 border border-[#D9E4EE] rounded-lg space-y-1">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Forecast Intensity
+            {intensityMeta.label}
           </span>
           <div className="text-2xl font-extrabold text-slate-950 font-mono">
             {stepIntensity.toFixed(1)}
-            <span className="text-xs text-slate-500 font-sans ml-1 font-normal">mm/24h</span>
+            <span className="text-xs text-slate-500 font-sans ml-1 font-normal">{intensityMeta.unit}</span>
           </div>
           <span className="text-[10px] text-slate-500 block font-mono">
             Uncertainty r = {radiusKm}km
@@ -109,7 +118,7 @@ export default function KeyMetricsPanel({
             {Math.round((selectedEvent.ensemble_agreement ?? 0) * 100)}%
           </div>
           <span className="text-[10px] text-slate-500 block font-mono">
-            ECMWF / GFS / ICON
+            NEPS-G Ensemble
           </span>
         </div>
 
@@ -129,11 +138,11 @@ export default function KeyMetricsPanel({
 
       {/* EFI (Extreme Forecast Index) Gauge Breakdown */}
       <div className="p-4 bg-slate-50 border border-[#D9E4EE] rounded-lg space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="text-xs font-bold uppercase text-slate-700 tracking-wider">
             Extreme Forecast Index (EFI) Breakdown
           </span>
-          <span className="text-[11px] text-slate-500 font-mono">0.0 (Normal) → 1.0 (Extreme)</span>
+          <span className="text-[11px] text-slate-500 font-mono whitespace-nowrap shrink-0">0.0 (Normal) → 1.0 (Extreme)</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -184,12 +193,12 @@ export default function KeyMetricsPanel({
       {/* Coarse (12km) vs Downscaled (5km) Resolution Comparison */}
       {(coarse || downscaled) && (
         <div className="p-4 bg-slate-50 border border-[#D9E4EE] rounded-lg space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-600"></span>
               ML Downscaling Comparison (Coarse vs High-Res)
             </span>
-            <span className="text-[11px] font-mono text-blue-600">
+            <span className="text-[11px] font-mono text-blue-600 whitespace-nowrap shrink-0">
               Timestep: {currentTimestep?.timestep_label}
             </span>
           </div>

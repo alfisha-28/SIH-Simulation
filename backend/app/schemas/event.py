@@ -1,6 +1,7 @@
-from datetime import datetime
 from typing import List
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.schemas.common import UtcDatetime
 
 
 class Centroid(BaseModel):
@@ -34,6 +35,13 @@ class EventSummary(BaseModel):
     probability: float
     status: str
     confidence: str
+    centroid_lat: float
+    centroid_lon: float
+    ensemble_agreement: float
+    movement_direction: str
+    movement_speed_kmh: float
+    detected_at: UtcDatetime
+    forecast_lead_time_hours: int
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -59,8 +67,8 @@ class EventDetail(BaseModel):
     movement_direction: str
     movement_speed_kmh: float
     forecast_lead_time_hours: int
-    detected_at: datetime
-    created_at: datetime
+    detected_at: UtcDatetime
+    created_at: UtcDatetime
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

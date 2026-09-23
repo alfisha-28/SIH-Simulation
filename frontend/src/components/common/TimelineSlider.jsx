@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function TimelineSlider({
   timeline = [],
@@ -7,16 +7,44 @@ export default function TimelineSlider({
   title = "Forecast Lead Timeline",
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const canPlay = timeline.length > 1;
+
+  // Tracks the current index so the interval always advances from the real
+  // position and always hands the caller a plain number, never an updater
+  // function (a caller-side setState(number) and a caller-side handler that
+  // expects a number both need to keep working).
+  const selectedIndexRef = useRef(selectedIndex);
+  useEffect(() => {
+    selectedIndexRef.current = selectedIndex;
+  }, [selectedIndex]);
+
+  // A single step timeline (or the timeline switching under an active
+  // playback) should never leave Play stuck on with nothing to advance to.
+  useEffect(() => {
+    function resetPlayback() {
+      setIsPlaying(false);
+    }
+    resetPlayback();
+  }, [timeline]);
 
   useEffect(() => {
-    let timer;
-    if (isPlaying && timeline.length > 0) {
-      timer = setInterval(() => {
-        onSelectIndex((prev) => (prev + 1) % timeline.length);
-      }, 2200);
-    }
+    if (!isPlaying || !canPlay) return undefined;
+    const timer = setInterval(() => {
+      const nextIndex = selectedIndexRef.current + 1;
+      if (nextIndex >= timeline.length) {
+        setIsPlaying(false);
+        return;
+      }
+      onSelectIndex(nextIndex);
+    }, 2200);
     return () => clearInterval(timer);
-  }, [isPlaying, timeline.length, onSelectIndex]);
+  }, [isPlaying, canPlay, timeline.length, onSelectIndex]);
+
+  // Manual selection (drag or step click) always wins over autoplay.
+  const selectManually = (index) => {
+    setIsPlaying(false);
+    onSelectIndex(index);
+  };
 
   if (!timeline || timeline.length === 0) {
     return (
@@ -46,11 +74,16 @@ export default function TimelineSlider({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-              isPlaying
-                ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
-                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm'
+            type="button"
+            onClick={() => setIsPlaying((prev) => !prev)}
+            disabled={!canPlay}
+            aria-pressed={isPlaying}
+            className={`min-w-[10.5rem] whitespace-nowrap shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              !canPlay
+                ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                : isPlaying
+                ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 cursor-pointer'
+                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm cursor-pointer'
             }`}
           >
             {isPlaying ? (
@@ -103,7 +136,7 @@ export default function TimelineSlider({
           min={0}
           max={timeline.length - 1}
           value={selectedIndex}
-          onChange={(e) => onSelectIndex(Number(e.target.value))}
+          onChange={(e) => selectManually(Number(e.target.value))}
           className="w-full h-2 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-500 focus:outline-none"
         />
 
@@ -114,7 +147,7 @@ export default function TimelineSlider({
             return (
               <button
                 key={step.timestep_label || idx}
-                onClick={() => onSelectIndex(idx)}
+                onClick={() => selectManually(idx)}
                 className={`flex flex-col items-center py-2 px-1 rounded-lg text-center transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-blue-50 border border-blue-400 text-blue-700 shadow-sm scale-105 font-medium'

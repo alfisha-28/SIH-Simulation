@@ -3,10 +3,17 @@ export default function SystemStatusStrip({
   selectedEvent,
   onRefresh,
   loading = false,
+  error = null,
 }) {
   const activeCount = events.length;
   const severeCount = events.filter((e) => e.severity === 'severe').length;
   const moderateCount = events.filter((e) => e.severity === 'moderate').length;
+  // Counts are only meaningful once a real response has come back. While
+  // loading or after a failed fetch (with no events to show yet), a literal
+  // 0 would read as "no hazards" instead of "unknown", so show a placeholder
+  // dash instead. Once events are loaded, a manual refresh keeps showing the
+  // last known counts instead of blanking them out during the round trip.
+  const countLabel = (count) => ((loading || error) && events.length === 0 ? '--' : count);
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-slate-800">
@@ -32,8 +39,10 @@ export default function SystemStatusStrip({
             WARSHA Dashboard
           </h1>
           <div className="flex items-center space-x-2 text-xs text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-mono text-[11px]">OPERATIONAL RADAR ACTIVE</span>
+            <span className={`w-2 h-2 rounded-full ${error ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`}></span>
+            <span className="font-mono text-[11px]">
+              {error ? 'BACKEND OFFLINE' : 'OPERATIONAL RADAR ACTIVE'}
+            </span>
           </div>
         </div>
       </div>
@@ -42,17 +51,17 @@ export default function SystemStatusStrip({
       <div className="flex items-center space-x-4 text-xs font-mono">
         <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg space-y-0.5">
           <span className="text-[10px] text-slate-500 uppercase block font-bold">Active Threats</span>
-          <span className="text-sm font-bold text-slate-700">{activeCount} Events</span>
+          <span className="text-sm font-bold text-slate-700">{countLabel(activeCount)} Events</span>
         </div>
 
         <div className="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg space-y-0.5">
           <span className="text-[10px] text-red-500 uppercase block font-bold">Severe</span>
-          <span className="text-sm font-bold text-red-700">{severeCount} Critical</span>
+          <span className="text-sm font-bold text-red-700">{countLabel(severeCount)} Events</span>
         </div>
 
         <div className="px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg space-y-0.5 hidden sm:block">
           <span className="text-[10px] text-amber-600 uppercase block font-bold">Moderate</span>
-          <span className="text-sm font-bold text-amber-700">{moderateCount} Events</span>
+          <span className="text-sm font-bold text-amber-700">{countLabel(moderateCount)} Events</span>
         </div>
 
         {selectedEvent && (
