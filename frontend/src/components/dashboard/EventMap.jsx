@@ -9,7 +9,14 @@ import {
   Tooltip,
   useMap,
 } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { createEventIcon, createTrajectoryStepIcon } from './mapIcons';
+
+// Module scope so these are stable across renders (finding F88).
+const DEFAULT_CENTER = [21.5, 74.0];
+const DEFAULT_ZOOM = 5;
+const FIT_MAX_ZOOM = 11;
 
 const parseLatLng = (lat, lon) => {
   const numLat = typeof lat === 'string' ? parseFloat(lat) : lat;
@@ -29,21 +36,21 @@ const parseLatLng = (lat, lon) => {
   return null;
 };
 
-function MapRecenter({ center }) {
+// Frames the map on the selected event's own footprint instead of leaving it
+// at a fixed zoom (finding G5). The effect is keyed on `fitKey`, a primitive
+// string, rather than on the bounds/center arrays (which get a new identity
+// every render) so re-renders from the timestep slider or a drag in progress
+// do not yank the camera back (finding F88).
+function MapRecenter({ fitKey, bounds, fallbackCenter }) {
   const map = useMap();
   useEffect(() => {
-    if (
-      center &&
-      Array.isArray(center) &&
-      center.length === 2 &&
-      typeof center[0] === 'number' &&
-      !isNaN(center[0]) &&
-      typeof center[1] === 'number' &&
-      !isNaN(center[1])
-    ) {
-      map.panTo(center, { animate: true, duration: 1 });
+    if (bounds && bounds.length >= 2) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: FIT_MAX_ZOOM });
+    } else if (fallbackCenter) {
+      map.setView(fallbackCenter, DEFAULT_ZOOM, { animate: true });
     }
-  }, [center, map]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitKey, map]);
   return null;
 }
 
@@ -63,8 +70,6 @@ export default function EventMap({
     .map((step) => parseLatLng(step?.centroid?.lat, step?.centroid?.lon))
     .filter(Boolean);
 
-  // Center position for map pan
-  const DEFAULT_CENTER = [21.5, 74.0];
   const selectedPos = selectedEvent
     ? parseLatLng(selectedEvent.centroid_lat, selectedEvent.centroid_lon)
     : null;
@@ -92,21 +97,38 @@ export default function EventMap({
     : null;
   const bboxBounds = sw && ne ? [sw, ne] : null;
 
+  // Points that frame the selected event (trajectory + current bbox corners
+  // and centroid) plus every visible event, so the national overview stays
+  // in frame alongside the selection.
+  const fitPoints = [...trajectoryPositions];
+  if (sw) fitPoints.push(sw);
+  if (ne) fitPoints.push(ne);
+  if (selectedPos) fitPoints.push(selectedPos);
+  validEvents.forEach((evt) => {
+    const pos = parseLatLng(evt.centroid_lat, evt.centroid_lon);
+    if (pos) fitPoints.push(pos);
+  });
+  const fitBoundsPoints = fitPoints.length >= 2 ? fitPoints : null;
+  // Excludes selectedTimestepIndex (slider scrubbing shouldn't repan) but
+  // includes the forecast's own event_id so the fit re-runs once the newly
+  // selected event's forecast actually lands, not just its timeline length.
+  const fitKey = `${selectedEventId ?? 'none'}|${selectedEventForecast?.event_id ?? 'none'}|${timeline.length}|${validEvents.length}`;
+
   return (
-    <div className="relative w-full h-[450px] sm:h-[500px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
+    <div className="relative isolate w-full h-[320px] sm:h-[420px] lg:h-[500px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
       {/* Map status overlay badge */}
-      <div className="absolute top-3 right-3 z-[400] bg-slate-900/90 border border-slate-700/60 backdrop-blur px-3 py-1.5 rounded-md text-xs font-mono text-slate-300 flex items-center gap-2 shadow-lg">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>LIVE RADAR / TILE MAP</span>
+      <div className="absolute top-3 right-3 z-[1100] bg-slate-900/90 border border-slate-700/60 backdrop-blur px-3 py-1.5 rounded-md text-xs font-mono text-slate-300 flex items-center gap-2 shadow-lg">
+        <span>OpenStreetMap tiles</span>
       </div>
 
       <MapContainer
         center={mapCenter}
-        zoom={5}
-        scrollWheelZoom={true}
+        zoom={DEFAULT_ZOOM}
+        scrollWheelZoom={false}
+        dragging={!L.Browser.mobile}
         className="w-full h-full"
       >
-        <MapRecenter center={mapCenter} />
+        <MapRecenter fitKey={fitKey} bounds={fitBoundsPoints} fallbackCenter={mapCenter} />
 
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

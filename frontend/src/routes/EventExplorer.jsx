@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import SeverityBadge from '../components/common/SeverityBadge';
 import ConfidenceBadge from '../components/common/ConfidenceBadge';
+import ErrorState from '../components/common/ErrorState';
 
 export default function EventExplorer() {
   const navigate = useNavigate();
@@ -14,29 +15,32 @@ export default function EventExplorer() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [timeFilter, setTimeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Table sorting state
   const [sortField, setSortField] = useState('severity');
   const [sortDirection, setSortDirection] = useState('desc');
 
-  useEffect(() => {
-    async function loadEvents() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await apiGet('/events');
-        setEvents(res.events || []);
-      } catch (err) {
-        console.error('Failed to fetch events:', err);
-        setError(`Failed to load events: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
+  const loadEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiGet('/events');
+      setEvents(res.events || []);
+    } catch (err) {
+      console.error('Failed to fetch events:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    loadEvents();
   }, []);
+
+  useEffect(() => {
+    async function init() {
+      await loadEvents();
+    }
+    init();
+  }, [loadEvents]);
 
   // Filtered & Sorted events calculation
   const filteredEvents = useMemo(() => {
@@ -61,6 +65,7 @@ export default function EventExplorer() {
 
   const sortedEvents = useMemo(() => {
     const severityOrder = { severe: 3, moderate: 2, low: 1 };
+    const confidenceOrder = { high: 3, moderate: 2, low: 1 };
     return [...filteredEvents].sort((a, b) => {
       let valA = a[sortField];
       let valB = b[sortField];
@@ -68,6 +73,11 @@ export default function EventExplorer() {
       if (sortField === 'severity') {
         valA = severityOrder[a.severity] || 0;
         valB = severityOrder[b.severity] || 0;
+      }
+
+      if (sortField === 'confidence') {
+        valA = confidenceOrder[(a.confidence || '').toLowerCase()] || 0;
+        valB = confidenceOrder[(b.confidence || '').toLowerCase()] || 0;
       }
 
       if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
@@ -85,11 +95,18 @@ export default function EventExplorer() {
     }
   };
 
+  // Every sortable header shows an arrow, dim when it is not the active
+  // column, so all sortable columns look sortable instead of only the one
+  // currently in use.
+  const sortArrow = (field) =>
+    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : (
+      <span className="text-slate-400" aria-hidden="true">↕</span>
+    );
+
   const resetFilters = () => {
     setTypeFilter('all');
     setSeverityFilter('all');
     setStatusFilter('all');
-    setTimeFilter('all');
     setSearchQuery('');
   };
 
@@ -113,20 +130,13 @@ export default function EventExplorer() {
 
         <div className="flex items-center space-x-3 text-xs font-mono">
           <span className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
-            Total Detected: <strong className="text-blue-600">{events.length}</strong>
+            Total Detected: <strong className="text-blue-600">{loading || error ? '--' : events.length}</strong>
           </span>
           <span className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
-            Showing: <strong className="text-blue-600">{sortedEvents.length}</strong>
+            Showing: <strong className="text-blue-600">{loading || error ? '--' : sortedEvents.length}</strong>
           </span>
         </div>
       </div>
-
-      {/* Error Alert */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-mono rounded-xl shadow-sm">
-          {error}
-        </div>
-      )}
 
       {/* Filter Controls Bar */}
       <div className="bg-white border border-[#D9E4EE] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
@@ -140,7 +150,7 @@ export default function EventExplorer() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search Box */}
           <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-500 uppercase block">Search</label>
@@ -197,21 +207,6 @@ export default function EventExplorer() {
               <option value="resolved">Resolved</option>
             </select>
           </div>
-
-          {/* Time Window */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-mono text-slate-500 uppercase block">Time Window</label>
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono"
-            >
-              <option value="all">All Available</option>
-              <option value="24h">Last 24 Hours</option>
-              <option value="48h">Last 48 Hours</option>
-              <option value="7d">Last 7 Days</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -222,17 +217,27 @@ export default function EventExplorer() {
             <div className="w-4 h-4 rounded-full bg-blue-600 animate-ping mx-auto"></div>
             <div>Querying Event Intelligence Database...</div>
           </div>
-        ) : sortedEvents.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="text-slate-700 text-sm font-semibold">No events match the selected filters.</div>
-            <p className="text-xs text-slate-500 font-mono">Try adjusting or resetting your filter criteria above.</p>
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-mono transition-colors border border-slate-300"
-            >
-              Clear Filters
-            </button>
+        ) : error ? (
+          <div className="p-8">
+            <ErrorState detail={error} onRetry={loadEvents} />
           </div>
+        ) : sortedEvents.length === 0 ? (
+          events.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <div className="text-slate-700 text-sm font-semibold">No events detected.</div>
+            </div>
+          ) : (
+            <div className="p-12 text-center space-y-3">
+              <div className="text-slate-700 text-sm font-semibold">No events match the selected filters.</div>
+              <p className="text-xs text-slate-500 font-mono">Try adjusting or resetting your filter criteria above.</p>
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-mono transition-colors border border-slate-300"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
@@ -240,36 +245,46 @@ export default function EventExplorer() {
                 <tr>
                   <th
                     onClick={() => handleSort('event_id')}
-                    className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
+                    className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors whitespace-nowrap"
                   >
-                    Event ID {sortField === 'event_id' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    Event ID {sortArrow('event_id')}
                   </th>
                   <th
                     onClick={() => handleSort('type')}
                     className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
                   >
-                    Threat Type {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    Threat Type {sortArrow('type')}
                   </th>
                   <th
                     onClick={() => handleSort('location_name')}
                     className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
                   >
-                    Location {sortField === 'location_name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    Location {sortArrow('location_name')}
                   </th>
                   <th
                     onClick={() => handleSort('severity')}
                     className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
                   >
-                    Severity {sortField === 'severity' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    Severity {sortArrow('severity')}
                   </th>
                   <th
                     onClick={() => handleSort('probability')}
                     className="py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
                   >
-                    Probability {sortField === 'probability' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    Probability {sortArrow('probability')}
                   </th>
-                  <th className="py-3.5 px-4 font-bold">Status</th>
-                  <th className="py-3.5 px-4 font-bold">Confidence</th>
+                  <th
+                    onClick={() => handleSort('status')}
+                    className="hidden lg:table-cell py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
+                  >
+                    Status {sortArrow('status')}
+                  </th>
+                  <th
+                    onClick={() => handleSort('confidence')}
+                    className="hidden lg:table-cell py-3.5 px-4 font-bold cursor-pointer hover:text-slate-800 transition-colors"
+                  >
+                    Confidence {sortArrow('confidence')}
+                  </th>
                   <th className="py-3.5 px-4 font-bold text-right">Action</th>
                 </tr>
               </thead>
@@ -283,7 +298,7 @@ export default function EventExplorer() {
                     }}
                     className="hover:bg-slate-50 transition-colors cursor-pointer group text-slate-800"
                   >
-                    <td className="py-3.5 px-4 font-bold text-blue-600 group-hover:underline">
+                    <td className="py-3.5 px-4 font-bold text-blue-600 group-hover:underline whitespace-nowrap">
                       {evt.event_id}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-slate-950">
@@ -298,13 +313,13 @@ export default function EventExplorer() {
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {Math.round(evt.probability * 100)}%
                     </td>
-                    <td className="py-3.5 px-4 capitalize text-slate-500">
+                    <td className="hidden lg:table-cell py-3.5 px-4 capitalize text-slate-500">
                       {evt.status}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <ConfidenceBadge confidence={evt.confidence} />
+                    <td className="hidden lg:table-cell py-3.5 px-4">
+                      <ConfidenceBadge confidence={evt.confidence} label={null} />
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <Link
                         to={`/events/${evt.event_id}`}
                         onClick={(e) => {
@@ -313,13 +328,16 @@ export default function EventExplorer() {
                         }}
                         className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors"
                       >
-                        Inspect Intelligence →
+                        Inspect →
                       </Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <p className="sm:hidden px-4 py-2 text-[11px] text-slate-500 border-t border-[#D9E4EE]">
+              Scroll the table sideways to see more.
+            </p>
           </div>
         )}
       </div>

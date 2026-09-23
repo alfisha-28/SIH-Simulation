@@ -1,9 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import SeverityBadge from '../components/common/SeverityBadge';
 import ConfidenceBadge from '../components/common/ConfidenceBadge';
+import ErrorState from '../components/common/ErrorState';
 import TimelineSlider from '../components/common/TimelineSlider';
+
+// Clears the remembered nav id only when it still points at this (now invalid) event,
+// so a stale/404 id never keeps sending nav links back to a page that doesn't exist.
+function clearActiveEventIdIfCurrent(eventId) {
+  try {
+    if (localStorage.getItem('lastActiveEventId') === eventId) {
+      localStorage.removeItem('lastActiveEventId');
+    }
+  } catch {
+    // storage may be blocked (private mode, disabled cookies); nav fallback still works.
+  }
+}
 
 export default function EventForecast() {
   const { eventId } = useParams();
@@ -14,48 +27,53 @@ export default function EventForecast() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
-  // Sync eventId to localStorage on mount
-  useEffect(() => {
-    if (eventId) {
-      localStorage.setItem('lastActiveEventId', eventId);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setNotFound(false);
+    setError(null);
+    try {
+      const [detailRes, forecastRes] = await Promise.all([
+        apiGet(`/events/${eventId}`).catch(() => null),
+        apiGet(`/events/${eventId}/forecast`),
+      ]);
+
+      if (!forecastRes || !forecastRes.timeline) {
+        setNotFound(true);
+        clearActiveEventIdIfCurrent(eventId);
+        return;
+      }
+
+      setEventDetail(detailRes);
+      setForecast(forecastRes);
+      setSelectedTimestepIndex(0);
+      // Only remember this id as the active event once it is confirmed to resolve,
+      // so nav links never get pointed at an id that turns out to be a 404.
+      try {
+        localStorage.setItem('lastActiveEventId', eventId);
+      } catch {
+        // storage may be blocked; the page itself still works without it.
+      }
+    } catch (err) {
+      console.error(`Error loading forecast for event ${eventId}:`, err);
+      if (err.message && err.message.includes('404')) {
+        setNotFound(true);
+        clearActiveEventIdIfCurrent(eventId);
+      } else {
+        setError(err.message || 'Failed to load forecast data.');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [eventId]);
 
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      setNotFound(false);
-      setError(null);
-      try {
-        const [detailRes, forecastRes] = await Promise.all([
-          apiGet(`/events/${eventId}`).catch(() => null),
-          apiGet(`/events/${eventId}/forecast`),
-        ]);
-
-        if (!forecastRes || !forecastRes.timeline) {
-          setNotFound(true);
-          return;
-        }
-
-        setEventDetail(detailRes);
-        setForecast(forecastRes);
-        setSelectedTimestepIndex(0);
-      } catch (err) {
-        console.error(`Error loading forecast for event ${eventId}:`, err);
-        if (err.message && err.message.includes('404')) {
-          setNotFound(true);
-        } else {
-          setError(`Failed to load localized forecast data for ${eventId}: ${err.message}`);
-        }
-      } finally {
-        setLoading(false);
+    async function init() {
+      if (eventId) {
+        await loadData();
       }
     }
-
-    if (eventId) {
-      loadData();
-    }
-  }, [eventId]);
+    init();
+  }, [eventId, loadData]);
 
   const formatEventType = (type) => {
     return (type || '').replace('_', ' ').toUpperCase();
@@ -103,10 +121,12 @@ export default function EventForecast() {
   // Render Error state
   if (error || !forecast) {
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
-          {error || 'Failed to load forecast data.'}
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-4">
+        <ErrorState
+          message={`Can't load the localized forecast for ${eventId}.`}
+          detail={error}
+          onRetry={loadData}
+        />
         <Link to="/events" className="text-xs text-blue-600 hover:underline">
           ← Back to Events
         </Link>
@@ -118,10 +138,29 @@ export default function EventForecast() {
   const coarse = currentStep?.coarse || {};
   const downscaled = currentStep?.downscaled || {};
 
-  // Calculate delta if rainfall values are present
-  const rainfallDelta =
-    downscaled.peak_rainfall_mm !== undefined && coarse.rainfall_mm !== undefined
-      ? (downscaled.peak_rainfall_mm - coarse.rainfall_mm).toFixed(1)
+  // The headline metric depends on what kind of event this is: a rainfall event's
+  // defining number is peak rainfall, but a heat or wind event has no rainfall to
+  // speak of, so showing "Peak Rainfall 0 mm" as the headline for those buries the
+  // number that actually matters. Pick the metric from the event type instead of
+  // always defaulting to rainfall.
+  const HEADLINE_BY_TYPE = {
+    extreme_heat: { label: 'Temperature', unit: '°C', coarseValue: coarse.temperature_c, downscaledValue: downscaled.temperature_c },
+    high_wind: { label: 'Wind Speed', unit: 'km/h', coarseValue: coarse.wind_speed_kmh, downscaledValue: downscaled.wind_speed_kmh },
+  };
+  const headline = HEADLINE_BY_TYPE[eventDetail?.type] || {
+    label: 'Rainfall',
+    unit: 'mm',
+    coarseValue: coarse.rainfall_mm,
+    downscaledValue: downscaled.peak_rainfall_mm,
+  };
+
+  // The coarse field is a grid average, not a peak, so this is a peak-vs-average
+  // comparison rather than a true like-for-like delta. No calculation change is
+  // made here (the coarse schema has no peak value to compare against); instead
+  // the label below names the average explicitly instead of just saying "coarse".
+  const headlineDelta =
+    headline.downscaledValue != null && headline.coarseValue != null
+      ? (headline.downscaledValue - headline.coarseValue).toFixed(1)
       : null;
 
   return (
@@ -161,12 +200,12 @@ export default function EventForecast() {
       <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
-            <div className="flex items-center space-x-3">
-              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="whitespace-nowrap text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
                 {eventId}
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                DOWNSCALING MODEL: <strong className="text-slate-800">ECMWF IFS 12km → HR-Neural 5km</strong>
+                DOWNSCALING MODEL: <strong className="text-slate-800">Conditional Diffusion (12km to 5km)</strong>
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
@@ -234,11 +273,70 @@ export default function EventForecast() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Downscaling Highlights: these have no coarse-panel counterpart, so they
+            get their own full-width strip instead of being squeezed inside the
+            right (downscaled) panel where they used to sit opposite the coarse
+            panel's grid metaphor instead of lining up with anything comparable. */}
+        <div className="bg-white border border-blue-200 rounded-xl p-5 shadow-sm">
+          <h3 className="text-[11px] font-bold text-blue-700 uppercase tracking-wider font-mono mb-3">
+            Downscaling Highlights
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-500 uppercase block font-bold">Peak {headline.label}</span>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-xl font-black text-slate-900">
+                  {headline.downscaledValue ?? 'N/A'}
+                </span>
+                <span className="text-[10px] text-slate-500">{headline.unit}</span>
+              </div>
+              {headlineDelta && Number(headlineDelta) > 0 && (
+                <span className="text-[10px] font-bold text-red-600 block">
+                  +{headlineDelta} {headline.unit} vs 12 km grid avg
+                </span>
+              )}
+            </div>
+
+            {eventDetail?.type === 'extreme_rainfall' && (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block font-bold">Max Intensity</span>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-xl font-black text-slate-900">
+                    {downscaled.max_intensity_mmhr ?? 'N/A'}
+                  </span>
+                  <span className="text-[10px] text-slate-500">mm/h</span>
+                </div>
+                <span className="text-[10px] text-slate-500 block">Peak hourly rate</span>
+              </div>
+            )}
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-500 uppercase block font-bold">Extreme Preservation</span>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-xl font-black text-slate-900">
+                  {downscaled.extreme_preservation_pct != null
+                    ? `${downscaled.extreme_preservation_pct}%`
+                    : 'N/A'}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-500 block">Tail fidelity</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-500 uppercase block font-bold">Model Confidence</span>
+              <div className="pt-1">
+                <ConfidenceBadge confidence={downscaled.model_confidence} label={null} />
+              </div>
+              <span className="text-[10px] text-slate-500 block pt-0.5">Ensemble metric</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Panel: COARSE FORECAST (12 km) */}
           <div className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm relative overflow-hidden space-y-6">
             {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 relative z-10">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 relative z-10">
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
@@ -250,18 +348,18 @@ export default function EventForecast() {
                   Standard Global Operational Model
                 </p>
               </div>
-              <span className="px-3 py-1 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold font-mono">
+              <span className="whitespace-nowrap shrink-0 px-3 py-1 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold font-mono">
                 ~12 km Resolution
               </span>
             </div>
 
             {/* Visual Grid Stand-in Metaphor (Coarse - Blurry/Soft) */}
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative z-10">
-              <div className="flex justify-between text-[11px] font-mono text-slate-500">
+              <div className="flex flex-wrap justify-between gap-1 text-[11px] font-mono text-slate-500">
                 <span>Spatial Grid Metaphor (Coarse 4x4)</span>
-                <span>Smoothed Peak: {coarse.rainfall_mm ?? 'N/A'} mm</span>
+                <span>{headline.label} Grid Avg: {headline.coarseValue ?? 'N/A'}{headline.coarseValue != null ? ` ${headline.unit}` : ''}</span>
               </div>
-              <div className="grid grid-cols-4 gap-1.5 h-28 p-2 bg-white rounded-lg border border-slate-200 filter blur-[0.5px]">
+              <div className="grid grid-cols-4 gap-1.5 aspect-square w-full max-w-[16rem] mx-auto p-2 bg-white rounded-lg border border-slate-200 filter blur-[0.5px]">
                 {[...Array(16)].map((_, i) => {
                   const isCenter = [5, 6, 9, 10].includes(i);
                   return (
@@ -273,7 +371,7 @@ export default function EventForecast() {
                           : 'bg-slate-50 border border-slate-100 text-slate-400'
                       }`}
                     >
-                      {isCenter ? `${coarse.rainfall_mm || 95}` : '12km'}
+                      {isCenter ? `${headline.coarseValue ?? 'N/A'}` : '12km'}
                     </div>
                   );
                 })}
@@ -329,7 +427,7 @@ export default function EventForecast() {
           {/* Right Panel: DOWNSCALED FORECAST (5 km) */}
           <div className="bg-white border border-blue-300 rounded-2xl p-6 shadow-sm relative overflow-hidden space-y-6">
             {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-[#D9E4EE] pb-4 relative z-10">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9E4EE] pb-4 relative z-10">
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping"></span>
@@ -341,74 +439,25 @@ export default function EventForecast() {
                   High-Resolution Regional Anomaly Downscaler
                 </p>
               </div>
-              <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold font-mono shadow-sm">
+              <span className="whitespace-nowrap shrink-0 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold font-mono shadow-sm">
                 ~5 km Resolution
               </span>
             </div>
 
-            {/* Highlighted Key Downscaling Metrics Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs relative z-10">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block font-bold">Peak Rainfall</span>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-slate-900">
-                    {downscaled.peak_rainfall_mm ?? 'N/A'}
-                  </span>
-                  <span className="text-[10px] text-slate-500">mm</span>
-                </div>
-                {rainfallDelta && Number(rainfallDelta) > 0 && (
-                  <span className="text-[10px] font-bold text-red-600 block">
-                    +{rainfallDelta} mm vs coarse
-                  </span>
-                )}
-              </div>
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block font-bold">Max Intensity</span>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-slate-900">
-                    {downscaled.max_intensity_mmhr ?? 'N/A'}
-                  </span>
-                  <span className="text-[10px] text-slate-500">mm/h</span>
-                </div>
-                <span className="text-[10px] text-slate-500 block">Peak hourly rate</span>
-              </div>
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block font-bold">Extreme Preservation</span>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-xl font-black text-slate-900">
-                    {downscaled.extreme_preservation_pct !== undefined
-                      ? `${downscaled.extreme_preservation_pct}%`
-                      : 'N/A'}
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-500 block">Tail fidelity</span>
-              </div>
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block font-bold">Model Confidence</span>
-                <div className="pt-1">
-                  <ConfidenceBadge confidence={downscaled.model_confidence} />
-                </div>
-                <span className="text-[10px] text-slate-500 block pt-0.5">Ensemble metric</span>
-              </div>
-            </div>
-
             {/* Visual Grid Stand-in Metaphor (Fine - Crisp/High Contrast) */}
             <div className="p-4 bg-slate-50 border border-[#D9E4EE] rounded-xl space-y-3 relative z-10">
-              <div className="flex justify-between text-[11px] font-mono text-slate-500">
+              <div className="flex flex-wrap justify-between gap-1 text-[11px] font-mono text-slate-500">
                 <span>Spatial Grid Metaphor (Fine 8x8 Sharp Grid)</span>
-                <span className="font-bold text-red-600">Localized Peak: {downscaled.peak_rainfall_mm} mm</span>
+                <span className="font-bold text-red-600">Localized Peak: {headline.downscaledValue ?? 'N/A'}{headline.downscaledValue != null ? ` ${headline.unit}` : ''}</span>
               </div>
-              <div className="grid grid-cols-8 gap-1 h-28 p-2 bg-white border border-slate-200 rounded-lg">
+              <div className="grid grid-cols-8 gap-1 aspect-square w-full max-w-[16rem] mx-auto p-2 bg-white border border-slate-200 rounded-lg">
                 {[...Array(64)].map((_, i) => {
                   const isHotspot = [27, 28, 35, 36].includes(i);
                   const isNear = [18, 19, 20, 21, 26, 29, 34, 37, 42, 43, 44, 45].includes(i);
                   return (
                     <div
                       key={i}
-                      className={`rounded-sm transition-all flex items-center justify-center text-[7px] font-mono ${
+                      className={`rounded-sm transition-all flex items-center justify-center text-[9px] font-mono ${
                         isHotspot
                           ? 'bg-red-500 border border-red-300 text-white font-bold animate-pulse shadow-sm'
                           : isNear
@@ -423,33 +472,49 @@ export default function EventForecast() {
               </div>
             </div>
 
-            {/* Downscaled Secondary Metrics Grid */}
+            {/* Downscaled Metrics Grid: same six fields, in the same order, as the
+                coarse panel's Data Metrics Grid above, so each metric lands on the
+                same row on both sides of the comparison. */}
             <div className="grid grid-cols-2 gap-3 font-mono text-xs relative z-10 text-slate-800">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Area Avg Rainfall</span>
-                <span className="text-base font-bold text-slate-800">
-                  {downscaled.rainfall_mm !== undefined ? `${downscaled.rainfall_mm} mm` : 'N/A'}
+                <span className="text-[10px] text-slate-500 uppercase block">Rainfall (Area Avg)</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.rainfall_mm != null ? `${downscaled.rainfall_mm} mm` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Downscaled Temp</span>
-                <span className="text-base font-bold text-slate-800">
-                  {downscaled.temperature_c !== undefined ? `${downscaled.temperature_c} °C` : 'N/A'}
+                <span className="text-[10px] text-slate-500 uppercase block">Temperature</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.temperature_c != null ? `${downscaled.temperature_c} °C` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Downscaled Wind</span>
-                <span className="text-base font-bold text-slate-800">
-                  {downscaled.wind_speed_kmh !== undefined ? `${downscaled.wind_speed_kmh} km/h` : 'N/A'}
+                <span className="text-[10px] text-slate-500 uppercase block">Wind Speed</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.wind_speed_kmh != null ? `${downscaled.wind_speed_kmh} km/h` : 'N/A'}
                 </span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase block">Downscaled EFI</span>
-                <span className="text-base font-bold text-slate-800">
-                  {downscaled.efi !== undefined ? downscaled.efi.toFixed(2) : 'N/A'}
+                <span className="text-[10px] text-slate-500 uppercase block">Pressure</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.pressure_hpa != null ? `${downscaled.pressure_hpa} hPa` : 'N/A'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block">Humidity</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.humidity_pct != null ? `${downscaled.humidity_pct} %` : 'N/A'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase block">Extreme Index (EFI)</span>
+                <span className="text-lg font-bold text-slate-800">
+                  {downscaled.efi != null ? downscaled.efi.toFixed(2) : 'N/A'}
                 </span>
               </div>
             </div>

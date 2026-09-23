@@ -1,6 +1,7 @@
-from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+
+from app.schemas.common import UtcDatetime
 
 
 class RiskSnapshot(BaseModel):
@@ -15,9 +16,9 @@ class RiskSnapshot(BaseModel):
     heat_risk_probability: float
     impact_radius_km: float
     impact_region_name: str
-    expected_start: datetime
-    peak_period: datetime
-    expected_end: datetime
+    expected_start: UtcDatetime
+    peak_period: UtcDatetime
+    expected_end: UtcDatetime
 
     model_config = ConfigDict(from_attributes=True)
 

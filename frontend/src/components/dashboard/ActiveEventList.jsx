@@ -1,21 +1,19 @@
 import SeverityBadge from '../common/SeverityBadge';
+import { formatEventType } from '../../lib/format';
 
 export default function ActiveEventList({
   events = [],
   selectedEventId,
   onSelectEvent,
+  error = null,
 }) {
-  const formatEventType = (type) => {
-    return (type || '').replace('_', ' ').toUpperCase();
-  };
-
   return (
     <div className="bg-white border border-slate-200/90 rounded-2xl p-5 space-y-4 shadow-sm flex flex-col h-full text-slate-800">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
-          Active Events ({events.length})
+          Active Events ({error ? '--' : events.length})
         </h3>
         <span className="text-[11px] text-slate-400 font-mono font-medium">Sorted by Risk</span>
       </div>
@@ -23,8 +21,8 @@ export default function ActiveEventList({
       {/* Cards List */}
       <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
         {events.length === 0 ? (
-          <div className="p-6 text-xs text-slate-400 text-center font-mono">
-            No active events reported.
+          <div className="p-6 text-xs text-slate-500 text-center font-mono">
+            {error ? 'Unable to load events.' : 'No active events reported.'}
           </div>
         ) : (
           events.map((evt) => {

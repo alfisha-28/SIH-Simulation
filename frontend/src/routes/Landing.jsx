@@ -1,39 +1,45 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
+import ErrorState from '../components/common/ErrorState';
 
 export default function Landing() {
   const [events, setEvents] = useState([]);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadIndex, setReloadIndex] = useState(0);
 
   useEffect(() => {
     async function loadLandingData() {
       setLoading(true);
       setError(null);
-      try {
-        const [eventsRes, healthRes] = await Promise.all([
-          apiGet('/events').catch((err) => {
-            console.error('Failed to fetch /events on landing:', err);
-            return { events: [] };
-          }),
-          apiGet('/health').catch((err) => {
-            console.error('Failed to fetch /health on landing:', err);
-            return null;
-          }),
-        ]);
-        setEvents(eventsRes?.events || []);
-        setHealth(healthRes);
-      } catch (err) {
-        setError(err.message || 'Failed to connect to weather intelligence system');
-      } finally {
-        setLoading(false);
-      }
+      let failureDetail = null;
+
+      // Each request catches its own failure so one down endpoint does not
+      // block the other, but the failure is recorded here instead of being
+      // swallowed, so the outage actually reaches the UI below.
+      const [eventsRes, healthRes] = await Promise.all([
+        apiGet('/events').catch((err) => {
+          console.error('Failed to fetch /events on landing:', err);
+          failureDetail = failureDetail || err.message || 'Request failed';
+          return null;
+        }),
+        apiGet('/health').catch((err) => {
+          console.error('Failed to fetch /health on landing:', err);
+          failureDetail = failureDetail || err.message || 'Request failed';
+          return null;
+        }),
+      ]);
+
+      setEvents(eventsRes?.events || []);
+      setHealth(healthRes);
+      setError(failureDetail);
+      setLoading(false);
     }
 
     loadLandingData();
-  }, []);
+  }, [reloadIndex]);
 
   const activeEventsCount = events.length;
   const highRiskCount = events.filter(
@@ -72,16 +78,14 @@ export default function Landing() {
             </span>
           ) : (
             <span className="px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-600">
-              STANDBY
+              OFFLINE
             </span>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
-          ⚠️ Backend Warning: {error} (Displaying available interface)
-        </div>
+        <ErrorState detail={error} onRetry={() => setReloadIndex((n) => n + 1)} />
       )}
 
       {/* Hero Section */}
@@ -140,12 +144,14 @@ export default function Landing() {
               Active Events
             </span>
             <span className="text-3xl font-extrabold font-mono text-slate-900 mt-1 block">
-              {loading ? '...' : activeEventsCount}
+              {loading || error ? '--' : activeEventsCount}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">Live anomaly instances</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
-            ⚡
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
           </div>
         </div>
 
@@ -156,12 +162,14 @@ export default function Landing() {
               High-Risk Zones
             </span>
             <span className="text-3xl font-extrabold font-mono text-red-600 mt-1 block">
-              {loading ? '...' : highRiskCount}
+              {loading || error ? '--' : highRiskCount}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">Severe severity zones</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
-            ⚠
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
           </div>
         </div>
 
@@ -171,13 +179,19 @@ export default function Landing() {
             <span className="text-xs font-mono text-slate-500 uppercase tracking-wider block">
               System Pipeline
             </span>
-            <span className="text-xl font-bold font-mono text-emerald-600 mt-2 block uppercase">
-              {health?.status || 'Operational'}
+            <span
+              className={`text-xl font-bold font-mono mt-2 block uppercase ${
+                loading ? 'text-amber-600' : health ? 'text-emerald-600' : 'text-slate-600'
+              }`}
+            >
+              {loading ? 'Checking' : health ? health.status : 'Offline'}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">FastAPI backend link</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500 font-mono font-bold">
-            ✓
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-[#D9E4EE] flex items-center justify-center text-slate-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
-from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from app.schemas.event import Centroid, BBox
+from app.schemas.common import UtcDatetime
 
 
 class CoarseWeatherField(BaseModel):
@@ -35,7 +35,7 @@ class DownscaledWeatherField(BaseModel):
 class TrajectoryPointResponse(BaseModel):
     timestep_label: str
     timestep_hours_offset: int
-    timestamp: datetime
+    timestamp: UtcDatetime
     centroid: Centroid
     intensity: float
     probability: float
