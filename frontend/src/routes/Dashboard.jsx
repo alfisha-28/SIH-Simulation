@@ -55,11 +55,11 @@ export default function Dashboard() {
   }, []);
 
   // Fetch list of events on mount
-  const loadEvents = useCallback(async () => {
+  const loadEvents = useCallback(async (fresh = false) => {
     setLoadingEvents(true);
     setError(null);
     try {
-      const res = await apiGet('/events');
+      const res = await apiGet('/events', { fresh });
       const eventList = res.events || [];
       setEvents(eventList);
 
@@ -104,7 +104,7 @@ export default function Dashboard() {
       <SystemStatusStrip
         events={events}
         selectedEvent={selectedEvent}
-        onRefresh={loadEvents}
+        onRefresh={() => loadEvents(true)}
         loading={loadingEvents || loadingForecast}
       />
 

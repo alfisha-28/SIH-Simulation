@@ -9,6 +9,7 @@ import {
   Tooltip,
   useMap,
 } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { createEventIcon, createTrajectoryStepIcon } from './mapIcons';
 
 const parseLatLng = (lat, lon) => {
