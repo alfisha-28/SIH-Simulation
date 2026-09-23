@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import SeverityBadge from '../components/common/SeverityBadge';
 import ConfidenceBadge from '../components/common/ConfidenceBadge';
+import ErrorState from '../components/common/ErrorState';
 import EventMap from '../components/dashboard/EventMap';
+import { formatEventType, formatTimestampUTC } from '../lib/format';
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -14,43 +16,50 @@ export default function EventDetail() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
-  // Sync eventId to localStorage when successfully mounted
-  useEffect(() => {
-    if (eventId) {
-      localStorage.setItem('lastActiveEventId', eventId);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setNotFound(false);
+    setError(null);
+    try {
+      const [detailRes, forecastRes, riskRes] = await Promise.all([
+        apiGet(`/events/${eventId}`),
+        apiGet(`/events/${eventId}/forecast`),
+        apiGet(`/events/${eventId}/risk`).catch(() => null), // Graceful optional fallback
+      ]);
+      setEventDetail(detailRes);
+      setEventForecast(forecastRes);
+      setEventRisk(riskRes);
+      // Only remember this id once it is confirmed to exist, not on mount.
+      try {
+        localStorage.setItem('lastActiveEventId', eventId);
+      } catch {
+        // Storage may be unavailable (private mode, blocked); nav fallback still works without it.
+      }
+    } catch (err) {
+      console.error(`Error loading event ${eventId}:`, err);
+      if (err.message && err.message.includes('404')) {
+        setNotFound(true);
+        try {
+          localStorage.removeItem('lastActiveEventId');
+        } catch {
+          // ignore
+        }
+      } else {
+        setError(err.message || 'Failed to load event details.');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [eventId]);
 
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      setNotFound(false);
-      setError(null);
-      try {
-        const [detailRes, forecastRes, riskRes] = await Promise.all([
-          apiGet(`/events/${eventId}`),
-          apiGet(`/events/${eventId}/forecast`),
-          apiGet(`/events/${eventId}/risk`).catch(() => null), // Graceful optional fallback
-        ]);
-        setEventDetail(detailRes);
-        setEventForecast(forecastRes);
-        setEventRisk(riskRes);
-      } catch (err) {
-        console.error(`Error loading event ${eventId}:`, err);
-        if (err.message && err.message.includes('404')) {
-          setNotFound(true);
-        } else {
-          setError(`Failed to load event intelligence for ${eventId}: ${err.message}`);
-        }
-      } finally {
-        setLoading(false);
+    async function init() {
+      if (eventId) {
+        await loadData();
       }
     }
-
-    if (eventId) {
-      loadData();
-    }
-  }, [eventId]);
+    init();
+  }, [eventId, loadData]);
 
   // Derive Primary Anomaly from highest EFI value
   const primaryAnomaly = useMemo(() => {
@@ -86,8 +95,13 @@ export default function EventDetail() {
     }
   };
 
-  const formatEventType = (type) => {
-    return (type || '').replace('_', ' ').toUpperCase();
+  // Consensus wording derived from the real ensemble agreement value, so the
+  // narrative can never claim "high confidence" when the number says otherwise.
+  const getConsensusPhrase = (agreement) => {
+    if (typeof agreement !== 'number') return 'though model consensus is unavailable';
+    if (agreement >= 0.85) return 'indicating strong model consensus';
+    if (agreement >= 0.7) return 'indicating moderate model consensus';
+    return 'though model consensus is limited';
   };
 
   // Render 404 / Not Found state
@@ -107,7 +121,7 @@ export default function EventDetail() {
               to="/events"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
             >
-              ← Return to Events Explorer
+              <span aria-hidden="true">←</span> Return to Events Explorer
             </Link>
           </div>
         </div>
@@ -132,12 +146,16 @@ export default function EventDetail() {
   if (error || !eventDetail) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-mono">
-          {error || 'Failed to load event details.'}
+        <ErrorState
+          message={`Failed to load event intelligence for ${eventId}.`}
+          detail={error}
+          onRetry={loadData}
+        />
+        <div className="text-center">
+          <Link to="/events" className="text-xs text-blue-600 hover:underline">
+            <span aria-hidden="true">←</span> Back to Events
+          </Link>
         </div>
-        <Link to="/events" className="text-xs text-blue-600 hover:underline">
-          ← Back to Events
-        </Link>
       </div>
     );
   }
@@ -150,7 +168,7 @@ export default function EventDetail() {
           to="/events"
           className="text-xs font-mono text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center gap-1"
         >
-          ← Back to Events Explorer
+          <span aria-hidden="true">←</span> Back to Events Explorer
         </Link>
       </div>
 
@@ -172,7 +190,7 @@ export default function EventDetail() {
           </div>
 
           {/* Badges Stack */}
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2">
             <SeverityBadge severity={eventDetail.severity} className="text-sm px-3 py-1" />
             <div className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md font-mono text-xs text-blue-700 font-bold">
               {Math.round(eventDetail.probability * 100)}% Probability
@@ -190,7 +208,7 @@ export default function EventDetail() {
           <div>
             <span className="text-slate-400 block uppercase text-[10px]">Detected At</span>
             <span className="text-slate-800 font-bold">
-              {new Date(eventDetail.detected_at).toUTCString().replace(' GMT', '')}
+              {formatTimestampUTC(eventDetail.detected_at)}
             </span>
           </div>
           <div>
@@ -298,8 +316,8 @@ export default function EventDetail() {
             </div>
             <p className="text-xs text-slate-700 leading-relaxed font-sans">
               System flagged this event due to a dominant <strong className="text-slate-900">{primaryAnomaly?.name}</strong> of{' '}
-              <strong className="text-slate-900">{primaryAnomaly?.value}</strong>. Multi-model ensemble agreement is at{' '}
-              <strong className="text-slate-900">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, confirming high confidence in atmospheric instability over {eventDetail.location_name}.
+              <strong className="text-slate-900">{primaryAnomaly?.value?.toFixed(2)}</strong>. Multi-model ensemble agreement is at{' '}
+              <strong className="text-slate-900">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, {getConsensusPhrase(eventDetail.ensemble_agreement)} over {eventDetail.location_name}.
             </p>
           </div>
         </div>
@@ -360,8 +378,8 @@ export default function EventDetail() {
           </div>
 
           {eventRisk && (
-            <div className="flex items-center space-x-3 text-xs font-mono">
-              <span className="text-slate-500">Current Risk Snapshot:</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              <span className="text-slate-500 whitespace-nowrap">Current Risk Snapshot:</span>
               <SeverityBadge severity={eventRisk.overall_risk} />
               <span className="text-slate-500">({eventRisk.impact_region_name})</span>
             </div>
@@ -369,21 +387,21 @@ export default function EventDetail() {
         </div>
 
         {/* Navigation CTAs */}
-        <div className="flex flex-wrap items-center gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
           <Link
             to={`/events/${eventDetail.event_id}/forecast`}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+            className="w-full sm:w-auto justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
             <span>View Localized Forecast</span>
-            <span>→</span>
+            <span aria-hidden="true">→</span>
           </Link>
 
           <Link
             to={`/events/${eventDetail.event_id}/risk`}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+            className="w-full sm:w-auto justify-center px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
             <span>View Risk Details</span>
-            <span>→</span>
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>
