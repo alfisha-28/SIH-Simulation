@@ -1,8 +1,35 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
+import { formatEventType, formatTimestampUTC } from '../lib/format';
+import ErrorState from '../components/common/ErrorState';
 
 const SEVERITY_ORDER = { severe: 1, moderate: 2, low: 3 };
+
+// Backend severity values (plus legacy aliases) collapsed into the three
+// buckets this page filters and counts by. Matches the words the API and
+// the rest of the app use, so the tabs, counters and badges all agree.
+const getSeverityBucket = (severity) => {
+  const sev = (severity || '').toLowerCase();
+  if (sev === 'severe' || sev === 'high') return 'SEVERE';
+  if (sev === 'moderate' || sev === 'warning') return 'MODERATE';
+  return 'LOW';
+};
+
+// Per hazard type impact line, so the card body describes the hazard
+// instead of repeating the severity the badge above it already shows.
+const getHazardImpact = (type) => {
+  switch (type) {
+    case 'extreme_rainfall':
+      return 'Flash-flood and riverine inundation risk';
+    case 'high_wind':
+      return 'Gale force wind damage and sea swell risk';
+    case 'extreme_heat':
+      return 'Extreme heatwave and thermal stress risk';
+    default:
+      return 'Severe weather risk';
+  }
+};
 
 const EventTypeIcon = ({ type }) => {
   const t = (type || '').toLowerCase();
@@ -49,55 +76,57 @@ export default function Alerts() {
   const [filterSeverity, setFilterSeverity] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    async function fetchAlerts() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await apiGet('/events');
-        setEvents(res?.events || []);
-      } catch (err) {
-        console.error('Error fetching events for alerts:', err);
-        setError(err.message || 'Failed to load active weather alerts');
-      } finally {
-        setLoading(false);
-      }
+  const loadAlerts = useCallback(async (fresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiGet('/events', { fresh });
+      setEvents(res?.events || []);
+    } catch (err) {
+      console.error('Error fetching events for alerts:', err);
+      setError(err.message || 'Failed to load active weather alerts');
+    } finally {
+      setLoading(false);
     }
-    fetchAlerts();
   }, []);
 
-  // Map severity to Alert Level & Palette
+  useEffect(() => {
+    async function init() {
+      await loadAlerts();
+    }
+    init();
+  }, [loadAlerts]);
+
+  // Map severity bucket to card palette. Level text uses the backend's own
+  // words (severe/moderate/low) so it never disagrees with the filter tabs.
   const getAlertConfig = (severity) => {
-    const sev = (severity || '').toLowerCase();
-    if (sev === 'severe' || sev === 'high') {
+    const bucket = getSeverityBucket(severity);
+    if (bucket === 'SEVERE') {
       return {
-        level: 'SEVERE ALERT',
+        level: 'SEVERE',
         badgeBg: 'bg-red-50 border-red-200 text-red-700',
         dotBg: 'bg-red-500',
         pingBg: 'bg-red-400',
         barColor: 'bg-red-500',
         probBadge: 'bg-red-50 text-red-700',
-        label: 'Extreme weather threat detected'
       };
-    } else if (sev === 'moderate' || sev === 'warning') {
+    } else if (bucket === 'MODERATE') {
       return {
-        level: 'MODERATE RISK',
+        level: 'MODERATE',
         badgeBg: 'bg-amber-50 border-amber-200 text-amber-800',
         dotBg: 'bg-amber-500',
         pingBg: 'bg-amber-400',
         barColor: 'bg-amber-500',
         probBadge: 'bg-amber-50 text-amber-700',
-        label: 'Heavy weather activity or heightened risk expected'
       };
     } else {
       return {
-        level: 'LOW RISK',
+        level: 'LOW',
         badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
         dotBg: 'bg-emerald-500',
         pingBg: 'bg-emerald-400',
         barColor: 'bg-emerald-500',
         probBadge: 'bg-emerald-50 text-emerald-700',
-        label: 'No immediate severe weather hazard reported'
       };
     }
   };
@@ -112,12 +141,8 @@ export default function Alerts() {
 
   const filteredAlerts = useMemo(() => {
     return sortedAlerts.filter((item) => {
-      const config = getAlertConfig(item.severity);
       const matchesFilter =
-        filterSeverity === 'ALL' || 
-        (filterSeverity === 'CRITICAL' && config.level === 'SEVERE ALERT') ||
-        (filterSeverity === 'HIGH' && config.level === 'MODERATE RISK') ||
-        (filterSeverity === 'ADVISORY' && config.level === 'LOW RISK');
+        filterSeverity === 'ALL' || getSeverityBucket(item.severity) === filterSeverity;
       const matchesSearch =
         item.location_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,13 +151,19 @@ export default function Alerts() {
     });
   }, [sortedAlerts, filterSeverity, searchQuery]);
 
-  const criticalCount = events.filter((e) => e.severity?.toLowerCase() === 'severe' || e.severity?.toLowerCase() === 'high').length;
-  const highCount = events.filter((e) => e.severity?.toLowerCase() === 'moderate' || e.severity?.toLowerCase() === 'warning').length;
-  const advisoryCount = events.filter((e) => e.severity?.toLowerCase() === 'low' || e.severity?.toLowerCase() === 'safe').length;
+  const severeCount = events.filter((e) => getSeverityBucket(e.severity) === 'SEVERE').length;
+  const moderateCount = events.filter((e) => getSeverityBucket(e.severity) === 'MODERATE').length;
+  const lowCount = events.filter((e) => getSeverityBucket(e.severity) === 'LOW').length;
+  // Counts only mean a real zero once a load has actually finished; while
+  // loading or failed they render '--' instead of a misleading 0.
+  const countsKnown = !loading && !error;
 
-  const formatEventType = (type) => {
-    return (type || '').replace('_', ' ').toUpperCase();
-  };
+  const filterTabs = [
+    { key: 'ALL', label: 'All', count: events.length },
+    { key: 'SEVERE', label: 'Severe', count: severeCount },
+    { key: 'MODERATE', label: 'Moderate', count: moderateCount },
+    { key: 'LOW', label: 'Low', count: lowCount },
+  ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-slate-800">
@@ -151,40 +182,32 @@ export default function Alerts() {
             </h1>
           </div>
 
-          {/* Quick Counter Pills */}
-          <div className="flex items-center space-x-2 text-xs">
-            <div className="px-3.5 py-1.5 bg-red-50 border border-red-200 rounded-xl text-red-700 font-semibold flex items-center gap-2 shadow-2xs">
-              <span className="text-[11px] uppercase tracking-wider font-mono">Critical:</span>
-              <span className="text-xs font-mono font-bold">{criticalCount}</span>
-            </div>
-            <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 font-semibold flex items-center gap-2 shadow-2xs">
-              <span className="text-[11px] uppercase tracking-wider font-mono">High:</span>
-              <span className="text-xs font-mono font-bold">{highCount}</span>
-            </div>
-            <div className="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 font-semibold flex items-center gap-2 shadow-2xs">
-              <span className="text-[11px] uppercase tracking-wider font-mono">Advisory:</span>
-              <span className="text-xs font-mono font-bold">{advisoryCount}</span>
-            </div>
-          </div>
         </div>
 
         {/* Filter and Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-          {/* Level Filter Tabs */}
-          <div className="flex items-center space-x-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto">
-            {['ALL', 'CRITICAL', 'HIGH', 'ADVISORY'].map((lvl) => (
-              <button
-                key={lvl}
-                onClick={() => setFilterSeverity(lvl)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  filterSeverity === lvl
-                    ? 'bg-white text-blue-600 border border-slate-200/80 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
-                }`}
-              >
-                {lvl}
-              </button>
-            ))}
+          {/* Level Filter Tabs, each carrying its own live count */}
+          <div className="flex items-center flex-wrap gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto">
+            {filterTabs.map(({ key, label, count }) => {
+              const isZero = countsKnown && count === 0 && key !== 'ALL';
+              return (
+                <button
+                  key={key}
+                  onClick={() => setFilterSeverity(key)}
+                  aria-pressed={filterSeverity === key}
+                  disabled={isZero}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                    filterSeverity === key
+                      ? 'bg-white text-blue-600 border border-slate-200/80 shadow-xs'
+                      : isZero
+                      ? 'text-slate-400 cursor-not-allowed'
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
+                  }`}
+                >
+                  {label} {countsKnown ? count : '--'}
+                </button>
+              );
+            })}
           </div>
 
           {/* Search Box */}
@@ -211,9 +234,10 @@ export default function Alerts() {
 
       {/* Error State */}
       {error && (
-        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-mono">
-          {error}
-        </div>
+        <ErrorState
+          detail={error}
+          onRetry={() => loadAlerts(true)}
+        />
       )}
 
       {/* Empty State */}
@@ -232,9 +256,11 @@ export default function Alerts() {
             const probPct = Math.round((event.probability || 0) * 100);
 
             return (
-              <div
+              <Link
                 key={event.event_id}
-                className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between space-y-5 group"
+                to={`/events/${event.event_id}`}
+                onClick={() => localStorage.setItem('lastActiveEventId', event.event_id)}
+                className="bg-white border border-[#D9E4EE] rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between space-y-5 group block"
               >
                 {/* Card Header: Level Badge & Event ID */}
                 <div className="space-y-4">
@@ -272,9 +298,9 @@ export default function Alerts() {
                   </div>
                 </div>
 
-                {/* Threat Description */}
+                {/* Threat Description: hazard impact, not a repeat of the severity badge */}
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  {config.label}
+                  {getHazardImpact(event.type)}
                 </p>
 
                 {/* Details Section: Progress & Windows */}
@@ -305,7 +331,7 @@ export default function Alerts() {
                         Valid Window
                       </span>
                       <span className="font-semibold font-mono text-[11px] text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
-                        Current (+{event.forecast_lead_time_hours || 48}h)
+                        {event.forecast_lead_time_hours != null ? `Current (+${event.forecast_lead_time_hours}h)` : 'Unknown'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200/50">
@@ -316,26 +342,23 @@ export default function Alerts() {
                         Detected Window
                       </span>
                       <span className="font-mono text-slate-600">
-                        {event.detected_at ? new Date(event.detected_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Active Window'}
+                        {formatTimestampUTC(event.detected_at)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Card Action Button */}
+                {/* Card Action: the whole card is the link now, so this is a plain
+                    styled div, not a nested anchor */}
                 <div className="pt-1">
-                  <Link
-                    to={`/events/${event.event_id}`}
-                    onClick={() => localStorage.setItem('lastActiveEventId', event.event_id)}
-                    className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
-                  >
+                  <div className="w-full py-2.5 px-4 bg-slate-900 group-hover:bg-slate-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-sm">
                     <span>View Event Intelligence</span>
                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
-                  </Link>
+                  </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
