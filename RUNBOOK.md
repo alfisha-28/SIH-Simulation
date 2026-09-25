@@ -1,4 +1,4 @@
-# Weather Intelligence Command Center — Demo Runbook
+# Weather Intelligence Command Center — Demo Runbook 
 
 Quick execution instructions for demo day to start the FastAPI backend server (via Docker or Python), seed the SQLite database, and launch the React frontend application.
 
