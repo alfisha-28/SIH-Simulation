@@ -348,7 +348,7 @@ export default function KvkDashboard() {
                 </div>
                 <p className="text-xs text-slate-600">
                   {selectedPeak.risk === 'low' ? 'Stays low' : `Around ${selectedPeak.leadLabel} (${selectedPeak.forecast.validTime})`}
-                  {' '}&middot; rain chance {formatPercent(selectedPeak.forecast.rainProbability)}
+                  {' '}&middot; chance of any rain (&ge;&nbsp;2.5&nbsp;mm) {formatPercent(selectedPeak.forecast.rainProbability)}
                 </p>
               </div>
               <dl className="grid grid-cols-2 gap-3 text-sm">

@@ -267,7 +267,7 @@ export default function PanchayatExplorer() {
             playFromStart
           />
           <p className="text-xs text-slate-500">
-            Percentages under each step are the rain probability (chance of at least 2.5&nbsp;mm in the 24&nbsp;h
+            Percentages under each step are the chance of any rain (at least 2.5&nbsp;mm in the 24&nbsp;h
             ending at that time) {mode === 'coarse' ? `for the ${selected.blockName} block, shared by all its Panchayats` : 'for the selected Panchayat'}.
           </p>
           {/* Wide layout: sits under the timeline. Narrow layout renders it after the panel instead (below). */}
