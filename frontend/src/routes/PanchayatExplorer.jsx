@@ -15,6 +15,7 @@ import {
   getDefaultPanchayatId,
   getForecastSeries,
   getPanchayat,
+  getPeakRisk,
 } from '../lib/panchayatData';
 
 // Panchayat Explorer (/panchayats): the demo of what the downscaling system
@@ -24,12 +25,17 @@ import {
 // URL contract (so other screens can deep-link here):
 //   ?gp=<panchayat id>   selected Panchayat (see lib/panchayatData.js). Unknown ids
 //                        fall back to the default GP with a visible notice.
-//   ?t=<hours>           lead time: 0 | 6 | 12 | 24 | 48 (default 0 = Now)
+//   ?t=<hours>           lead time: 0 | 6 | 12 | 24 | 48. Without it the page opens at the
+//                        default GP's peak-risk lead (+24h), where the downscaling story
+//                        shows; ?t=0 opens on Now.
 // Selection writes back to the URL with `replace`, so scrubbing and clicking do
 // not fill the browser history. Mode and colour variable are local UI state.
 
 // Worst peak risk over the horizon, computed once: the data is deterministic.
 const DEFAULT_GP_ID = getDefaultPanchayatId();
+// Opening at Now would show the default GP (picked for its worst peak) as Low on a
+// mostly green map, so the landing view is the lead time where that peak occurs.
+const DEFAULT_LEAD_HOURS = getPeakRisk(DEFAULT_GP_ID).leadHours;
 
 const MICRO = 'text-[11px] font-mono text-slate-500 uppercase tracking-wide';
 
@@ -55,8 +61,9 @@ export default function PanchayatExplorer() {
   const selectedId = requestedIsValid ? requestedGp : DEFAULT_GP_ID;
   const selected = getPanchayat(selectedId);
 
-  const requestedLead = Number(searchParams.get('t'));
-  const leadHours = LEAD_HOURS.includes(requestedLead) ? requestedLead : 0;
+  const requestedLeadParam = searchParams.get('t');
+  const requestedLead = requestedLeadParam === null || requestedLeadParam === '' ? NaN : Number(requestedLeadParam);
+  const leadHours = LEAD_HOURS.includes(requestedLead) ? requestedLead : DEFAULT_LEAD_HOURS;
   const leadIndex = LEAD_HOURS.indexOf(leadHours);
 
   const updateParams = useCallback(
@@ -78,7 +85,7 @@ export default function PanchayatExplorer() {
 
   const selectPanchayat = useCallback((id) => updateParams({ gp: id }), [updateParams]);
   const selectLeadHours = useCallback(
-    (hours) => updateParams({ t: hours === 0 ? null : String(hours) }),
+    (hours) => updateParams({ t: hours === DEFAULT_LEAD_HOURS ? null : String(hours) }),
     [updateParams]
   );
   const selectLeadIndex = useCallback((index) => selectLeadHours(LEAD_HOURS[index] ?? 0), [selectLeadHours]);
@@ -236,8 +243,8 @@ export default function PanchayatExplorer() {
       </div>
 
       {/* Map + panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-4 min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-5 xl:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-3 xl:col-span-2 space-y-4 min-w-0">
           <PanchayatMap
             mode={mode}
             variable={variable}
@@ -266,7 +273,7 @@ export default function PanchayatExplorer() {
           <div className="hidden lg:block">{blockComparison}</div>
         </div>
 
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-6 lg:col-span-2 xl:col-span-1">
           <PanchayatPanel
             panchayatId={selectedId}
             leadHours={leadHours}

@@ -55,6 +55,7 @@
 //   listForecasts(leadHours, mode)                      -> Forecast[] (one per GP)
 //   getPeakRisk(gpId, mode = 'downscaled')              -> { risk, leadHours, leadLabel, forecast } | null
 //       worst risk over the 48 h horizon (ties: higher riskScore, then earlier).
+//   BLOCK_ANCHORS                                       [[name, blockId, lat, lon]] taluka HQs each block must contain
 //   getDefaultPanchayatId()                             -> id of the GP with the worst peak risk
 //   compareRisk(a, b) / RISK_RANK                       -> ordering helpers for risk strings
 //   formatLeadHours(hours)                              -> 'Now' | '+6h' | ...
@@ -389,7 +390,7 @@ function buildGeography() {
     const ys = boundary.map((p) => p[1]);
     const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
     // The block's west edge is its coast/left edge, but the block is a skewed
-    // quad, so measure u against the row's own extent at the cell's latitude.
+    // quad; u and v are normalised to the block's bounding box.
     const cellUVs = cells.map((cell) => {
       const [cx, cy] = ringCentroid(cell);
       return [(cx - minX) / (maxX - minX), (maxY - cy) / (maxY - minY)];
@@ -715,6 +716,9 @@ let TABLE = null;
 function buildTable() {
   const downscaled = new Map(); // `${gpId}|${lead}` -> Forecast
   const coarse = new Map(); // `${blockId}|${lead}` -> Forecast (block aggregate)
+  // `${gpId}|${lead}` -> the block aggregate stamped with the GP id. Built once so
+  // getForecast(..., 'coarse') returns a stable, frozen object (consumers may memoise on it).
+  const coarseByGp = new Map();
 
   for (const h of LEAD_HOURS) {
     for (const gp of PANCHAYATS) {
@@ -776,9 +780,11 @@ function buildTable() {
           },
         })
       );
+      const blockForecast = coarse.get(`${block.id}|${h}`);
+      for (const id of block.gpIds) coarseByGp.set(`${id}|${h}`, deepFreeze({ ...blockForecast, gpId: id }));
     }
   }
-  return { downscaled, coarse };
+  return { downscaled, coarse, coarseByGp };
 }
 
 const table = () => (TABLE ??= buildTable());
@@ -790,10 +796,7 @@ export function getBlockForecast(blockId, leadHours) {
 export function getForecast(gpId, leadHours, mode = 'downscaled') {
   const gp = GP_BY_ID.get(gpId);
   if (!gp || !LEAD_HOURS.includes(leadHours)) return null;
-  if (mode === 'coarse') {
-    const block = getBlockForecast(gp.blockId, leadHours);
-    return block ? { ...block, gpId } : null;
-  }
+  if (mode === 'coarse') return table().coarseByGp.get(`${gpId}|${leadHours}`) ?? null;
   return table().downscaled.get(`${gpId}|${leadHours}`) ?? null;
 }
 

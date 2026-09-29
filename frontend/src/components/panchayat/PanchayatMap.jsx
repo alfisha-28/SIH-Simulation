@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, Tooltip, useMap } from 'react-leaflet';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Polygon, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -35,7 +35,8 @@ import { createSelectedPanchayatIcon } from './panchayatIcons';
 //                greyed out. Memoise the array, a new identity each render
 //                restyles all polygons.
 //   height       optional CSS height (number = px). Default is a responsive
-//                420 / 480 / 560 px so the caller does not have to size it.
+//                506 / 586 / 606 px (460 / 540 / 560 px of map plus the top
+//                padding reserved for the chips) so the caller need not size it.
 //   showLegend / showStatus   toggle the legend and the top-right chips.
 //   className    extra classes for the outer wrapper.
 //
@@ -49,10 +50,15 @@ import { createSelectedPanchayatIcon } from './panchayatIcons';
 const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const BOUNDS_OPTIONS = { padding: [10, 10] };
+// The top padding keeps the northern Panchayats (and the selected pin's name
+// label above them) clear of the status chips and the map's top edge. The
+// default heights below are raised by the same amount so the fit still lands on
+// a whole zoom level.
+const TOP_PADDING_PX = 56;
+const BOUNDS_OPTIONS = { paddingTopLeft: [10, TOP_PADDING_PX], paddingBottomRight: [10, 10] };
 // On phones the legend sits over the south-west corner of the data and touch
 // dragging is off, so keep the fit clear of it by reserving room at the bottom.
-const NARROW_BOUNDS_OPTIONS = { paddingTopLeft: [10, 10], paddingBottomRight: [10, 64] };
+const NARROW_BOUNDS_OPTIONS = { paddingTopLeft: [10, TOP_PADDING_PX], paddingBottomRight: [10, 64] };
 const NARROW_MAX_WIDTH_PX = 640;
 
 const FILL_OPACITY = 0.7;
@@ -86,6 +92,44 @@ function InvalidateOnResize() {
   return null;
 }
 
+// The pin's name label is ~32 px tall and sits 34 px above the pin, so it needs
+// ~120 px of room to clear the map's top edge and the status chips. The fit leaves
+// room for it, but the camera can also be zoomed or dragged, so when the pin
+// projects too close to the top edge the label is placed below the pin instead of
+// being cut off. Keyed by direction because Leaflet reads it only when the
+// tooltip is created.
+const LABEL_FLIP_MAX_Y_PX = 120;
+
+function SelectedPanchayatPin({ panchayat }) {
+  const map = useMap();
+  const [labelBelow, setLabelBelow] = useState(false);
+  const centroid = panchayat.centroid;
+
+  const update = useCallback(() => {
+    setLabelBelow(map.latLngToContainerPoint(centroid).y < LABEL_FLIP_MAX_Y_PX);
+  }, [map, centroid]);
+
+  useEffect(() => {
+    // whenReady runs at once on a loaded map, or after the initial fit otherwise.
+    map.whenReady(update);
+  }, [map, update]);
+  useMapEvents({ moveend: update, zoomend: update, resize: update });
+
+  return (
+    <Marker position={centroid} icon={createSelectedPanchayatIcon()} interactive={false} keyboard={false} zIndexOffset={1000}>
+      <Tooltip
+        key={labelBelow ? 'below' : 'above'}
+        permanent
+        direction={labelBelow ? 'bottom' : 'top'}
+        offset={labelBelow ? [0, 6] : [0, -34]}
+        opacity={0.96}
+      >
+        <span className="text-xs font-bold text-slate-900">{panchayat.name}</span>
+      </Tooltip>
+    </Marker>
+  );
+}
+
 function TooltipBody({ title, subtitle, valueLabel, value }) {
   return (
     <div className="text-xs space-y-0.5">
@@ -111,6 +155,35 @@ export default function PanchayatMap({
   className = '',
 }) {
   const [hoveredId, setHoveredId] = useState(null);
+  // react-leaflet re-binds a layer's handlers whenever the eventHandlers object
+  // changes identity, so build them once (keyed by GP id) and reach the latest
+  // onSelect through a ref. Otherwise every hover re-binds all 50 polygons.
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
+  const gpHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        PANCHAYATS.map((gp) => [
+          gp.id,
+          {
+            // Not a Tab stop: the polygons have no keyboard action, the
+            // Panchayat selector is the keyboard alternative.
+            add: (e) => e.target.getElement?.()?.setAttribute('tabindex', '-1'),
+            click: (e) => {
+              onSelectRef.current?.(gp.id);
+              // A tap leaves Leaflet's sticky tooltip stuck open (and clipped
+              // at the map edge); the side panel already shows the values.
+              if (L.Browser.mobile) e.target.closeTooltip();
+            },
+            mouseover: () => setHoveredId(gp.id),
+            mouseout: () => setHoveredId((current) => (current === gp.id ? null : current)),
+          },
+        ])
+      ),
+    []
+  );
   const variableDef = getHeatmapVariable(variable);
   const isCoarse = mode === 'coarse';
 
@@ -176,14 +249,14 @@ export default function PanchayatMap({
       // bounding box after a mouse click. The selection outline already marks
       // the polygon, so suppress that ring.
       className={`relative isolate w-full rounded-xl overflow-hidden border border-[#D9E4EE] shadow-sm bg-slate-200 [&_path.leaflet-interactive:focus]:outline-none ${
-        // Heights chosen so the fit lands on a whole zoom level from tablet up:
+        // Heights (data area 460 / 540 / 560 px plus the top padding) chosen so the fit lands on a whole zoom level from tablet up:
         // fractional zoom scales the tiles and leaves white seams at DPR 1.
-        height ? '' : 'h-[460px] sm:h-[540px] lg:h-[560px]'
+        height ? '' : 'h-[506px] sm:h-[586px] lg:h-[606px]'
       } ${className}`}
       style={height ? { height } : undefined}
     >
       {showStatus && (
-        <div className="absolute top-3 right-3 z-[1000] flex flex-col items-end gap-1.5 pointer-events-none">
+        <div className="absolute top-3 right-3 z-[1000] flex flex-wrap justify-end items-center gap-1.5 pointer-events-none">
           <SimulatedDataBadge className="bg-white/95 shadow-sm" />
           <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/95 border border-[#D9E4EE] shadow-sm text-[11px] font-mono font-bold text-slate-700">
             <span
@@ -192,7 +265,8 @@ export default function PanchayatMap({
             />
             {isCoarse ? 'Coarse · block level' : 'Downscaled · Panchayat level'}
           </span>
-          <span className="hidden sm:inline px-2.5 py-1 rounded-md bg-slate-900/85 text-white text-[11px] font-mono shadow-sm">
+          {/* Hidden at lg only: the map is ~565 px wide next to the side panel there, and three chips would run under the zoom buttons (the panel shows the valid time). */}
+          <span className="hidden sm:inline lg:hidden xl:inline px-2.5 py-1 rounded-md bg-slate-900/85 text-white text-[11px] font-mono shadow-sm">
             Valid {lead?.label ?? `+${leadHours}h`}
             {lead ? ` · ${lead.validTime}` : ''}
           </span>
@@ -224,19 +298,7 @@ export default function PanchayatMap({
             key={gp.id}
             positions={gp.polygon}
             pathOptions={style}
-            eventHandlers={{
-              // Not a Tab stop: the polygons have no keyboard action, the
-              // Panchayat selector is the keyboard alternative.
-              add: (e) => e.target.getElement?.()?.setAttribute('tabindex', '-1'),
-              click: (e) => {
-                onSelect?.(gp.id);
-                // A tap leaves Leaflet's sticky tooltip stuck open (and clipped
-                // at the map edge); the side panel already shows the values.
-                if (L.Browser.mobile) e.target.closeTooltip();
-              },
-              mouseover: () => setHoveredId(gp.id),
-              mouseout: () => setHoveredId((current) => (current === gp.id ? null : current)),
-            }}
+            eventHandlers={gpHandlers[gp.id]}
           >
             <Tooltip sticky direction="top" opacity={0.96}>
               <TooltipBody
@@ -269,19 +331,7 @@ export default function PanchayatMap({
           />
         )}
 
-        {selected && (
-          <Marker
-            position={selected.centroid}
-            icon={createSelectedPanchayatIcon()}
-            interactive={false}
-            keyboard={false}
-            zIndexOffset={1000}
-          >
-            <Tooltip permanent direction="top" offset={[0, -34]} opacity={0.96}>
-              <span className="text-xs font-bold text-slate-900">{selected.name}</span>
-            </Tooltip>
-          </Marker>
-        )}
+        {selected && <SelectedPanchayatPin panchayat={selected} />}
       </MapContainer>
     </div>
   );

@@ -5,6 +5,10 @@ import { getHeatmapVariable } from './heatmapScales';
 // swatches sit in a single row so the legend stays compact on a phone-sized map.
 export default function MapLegend({ variable, className = '' }) {
   const def = getHeatmapVariable(variable);
+  // Units keep their own case ('mm', 'km/h'): the uppercase micro-label style
+  // would turn them into 'MM' and 'KM/H'.
+  const unitMatch = def.legendTitle.match(/^(.*?)s*((.*))$/);
+  const [legendName, legendUnit] = unitMatch ? [unitMatch[1], unitMatch[2]] : [def.legendTitle, null];
   return (
     <div
       className={`bg-white/95 backdrop-blur border border-[#D9E4EE] rounded-lg shadow-md px-2.5 py-2 max-w-[calc(100%-1.5rem)] ${className}`}
@@ -13,7 +17,8 @@ export default function MapLegend({ variable, className = '' }) {
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className="text-[11px] font-mono font-bold text-slate-800 uppercase tracking-wide">
-          {def.legendTitle}
+          {legendName}
+          {legendUnit && <span className="normal-case"> {legendUnit}</span>}
         </span>
         <span className="text-[10px] text-slate-500">{def.legendNote}</span>
       </div>

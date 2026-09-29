@@ -26,7 +26,7 @@ export default function BlockComparison({ panchayatId, leadHours, mode, variable
   const isCoarse = mode === 'coarse';
   const blockForecast = getBlockForecast(block.id, leadHours);
   const members = getBlockPanchayats(block.id);
-  const [spreadLo, spreadHi] = blockForecast.spread.rainfallMm;
+  const [spreadLo, spreadHi] = blockForecast?.spread?.rainfallMm ?? [null, null];
 
   return (
     <section
@@ -46,10 +46,12 @@ export default function BlockComparison({ panchayatId, leadHours, mode, variable
         </div>
         <div className="sm:text-right text-xs font-mono text-slate-600">
           <div>
-            Block forecast <span className="font-bold text-slate-900">{formatRainMm(blockForecast.rainfallMm)} mm</span>
+            Block forecast{' '}
+            <span className="font-bold text-slate-900">{blockForecast ? `${formatRainMm(blockForecast.rainfallMm)} mm` : '--'}</span>
           </div>
           <div className="text-slate-500">
-            Panchayat spread {formatRainMm(spreadLo)}&ndash;{formatRainMm(spreadHi)} mm
+            Panchayat spread{' '}
+            {spreadLo === null ? '--' : `${formatRainMm(spreadLo)}–${formatRainMm(spreadHi)} mm`}
           </div>
         </div>
       </div>
@@ -77,12 +79,12 @@ export default function BlockComparison({ panchayatId, leadHours, mode, variable
                   <span className={`block text-sm truncate ${isSelected ? 'font-bold text-blue-700' : 'font-semibold text-slate-800'}`}>
                     {gp.name}
                   </span>
-                  <span className="block text-[11px] text-slate-500 truncate">{f.condition}</span>
+                  <span className="block text-[11px] text-slate-500 truncate">{f?.condition ?? '--'}</span>
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-800 tabular-nums whitespace-nowrap">
-                  {formatRainMm(f.rainfallMm)} mm
+                  {f ? `${formatRainMm(f.rainfallMm)} mm` : '--'}
                 </span>
-                <SeverityBadge severity={f.risk} className="shrink-0 min-w-[5.5rem] justify-center" />
+                <SeverityBadge severity={f?.risk} className="shrink-0 min-w-[5.5rem] justify-center" />
               </button>
             </li>
           );
