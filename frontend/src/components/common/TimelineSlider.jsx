@@ -5,6 +5,17 @@ export default function TimelineSlider({
   selectedIndex = 0,
   onSelectIndex,
   title = "Forecast Lead Timeline",
+  // Grid classes for the step buttons. The default suits the backend's six
+  // step timelines; callers with a different step count (the Panchayat
+  // Explorer has five) pass a matching column count so the row fills evenly.
+  stepGridClassName = 'grid-cols-3 sm:grid-cols-6',
+  // The small "+6h" line under each step label. Callers whose labels already
+  // read "Now" / "+6h" turn it off instead of printing the same text twice.
+  showStepOffsets = true,
+  // Play normally continues from the current step. Callers that open on a
+  // middle step (the Panchayat Explorer lands on the peak lead) set this so
+  // Play always replays the whole timeline from the first step.
+  playFromStart = false,
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const canPlay = timeline.length > 1;
@@ -39,6 +50,15 @@ export default function TimelineSlider({
     }, 2200);
     return () => clearInterval(timer);
   }, [isPlaying, canPlay, timeline.length, onSelectIndex]);
+
+  // Pressing Play on the last step (or with playFromStart) restarts from the
+  // first step; otherwise it would stop again straight away.
+  const togglePlay = () => {
+    if (!isPlaying && canPlay && (playFromStart || selectedIndex >= timeline.length - 1)) {
+      onSelectIndex(0);
+    }
+    setIsPlaying((prev) => !prev);
+  };
 
   // Manual selection (drag or step click) always wins over autoplay.
   const selectManually = (index) => {
@@ -75,7 +95,7 @@ export default function TimelineSlider({
         <div className="flex items-center space-x-3">
           <button
             type="button"
-            onClick={() => setIsPlaying((prev) => !prev)}
+            onClick={togglePlay}
             disabled={!canPlay}
             aria-pressed={isPlaying}
             className={`min-w-[10.5rem] whitespace-nowrap shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
@@ -115,7 +135,7 @@ export default function TimelineSlider({
             <span className="text-blue-700 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
               {currentStep.timestep_label}
             </span>
-            <span className="text-slate-500">({currentStep.timestep_hours_offset}h)</span>
+            {showStepOffsets && <span className="text-slate-500">({currentStep.timestep_hours_offset}h)</span>}
             {currentStep.risk_level && (
               <span
                 className={`px-2 py-0.5 border rounded uppercase font-bold text-[10px] ${getRiskBadgeColor(
@@ -141,7 +161,7 @@ export default function TimelineSlider({
         />
 
         {/* Step Marker Labels Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-3">
+        <div className={`grid ${stepGridClassName} gap-1.5 pt-3`}>
           {timeline.map((step, idx) => {
             const isSelected = idx === selectedIndex;
             return (
@@ -155,9 +175,11 @@ export default function TimelineSlider({
                 }`}
               >
                 <span className="font-bold text-xs font-mono">{step.timestep_label}</span>
-                <span className="text-[10px] opacity-70 font-mono">
-                  {step.timestep_hours_offset === 0 ? 'Now' : `+${step.timestep_hours_offset}h`}
-                </span>
+                {showStepOffsets && (
+                  <span className="text-[10px] opacity-70 font-mono">
+                    {step.timestep_hours_offset === 0 ? 'Now' : `+${step.timestep_hours_offset}h`}
+                  </span>
+                )}
                 {step.probability !== undefined && (
                   <span className={`text-[10px] mt-1 font-mono font-semibold ${isSelected ? 'text-blue-700' : 'text-blue-600'}`}>
                     {Math.round(step.probability * 100)}%
