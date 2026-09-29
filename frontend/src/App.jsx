@@ -13,6 +13,7 @@ const EventForecast = lazy(() => import('./routes/EventForecast'));
 const EventRisk = lazy(() => import('./routes/EventRisk'));
 const Alerts = lazy(() => import('./routes/Alerts'));
 const SystemInfo = lazy(() => import('./routes/SystemInfo'));
+const PanchayatExplorer = lazy(() => import('./routes/PanchayatExplorer'));
 const NotFound = lazy(() => import('./routes/NotFound'));
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="events/:eventId/forecast" element={<EventForecast />} />
             <Route path="events/:eventId/risk" element={<EventRisk />} />
             <Route path="alerts" element={<Alerts />} />
+            <Route path="panchayats" element={<PanchayatExplorer />} />
             <Route path="system" element={<SystemInfo />} />
             <Route path="*" element={<NotFound />} />
           </Route>

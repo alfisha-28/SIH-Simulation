@@ -5,6 +5,13 @@ export default function TimelineSlider({
   selectedIndex = 0,
   onSelectIndex,
   title = "Forecast Lead Timeline",
+  // Grid classes for the step buttons. The default suits the backend's six
+  // step timelines; callers with a different step count (the Panchayat
+  // Explorer has five) pass a matching column count so the row fills evenly.
+  stepGridClassName = 'grid-cols-3 sm:grid-cols-6',
+  // The small "+6h" line under each step label. Callers whose labels already
+  // read "Now" / "+6h" turn it off instead of printing the same text twice.
+  showStepOffsets = true,
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const canPlay = timeline.length > 1;
@@ -141,7 +148,7 @@ export default function TimelineSlider({
         />
 
         {/* Step Marker Labels Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-3">
+        <div className={`grid ${stepGridClassName} gap-1.5 pt-3`}>
           {timeline.map((step, idx) => {
             const isSelected = idx === selectedIndex;
             return (
@@ -155,9 +162,11 @@ export default function TimelineSlider({
                 }`}
               >
                 <span className="font-bold text-xs font-mono">{step.timestep_label}</span>
-                <span className="text-[10px] opacity-70 font-mono">
-                  {step.timestep_hours_offset === 0 ? 'Now' : `+${step.timestep_hours_offset}h`}
-                </span>
+                {showStepOffsets && (
+                  <span className="text-[10px] opacity-70 font-mono">
+                    {step.timestep_hours_offset === 0 ? 'Now' : `+${step.timestep_hours_offset}h`}
+                  </span>
+                )}
                 {step.probability !== undefined && (
                   <span className={`text-[10px] mt-1 font-mono font-semibold ${isSelected ? 'text-blue-700' : 'text-blue-600'}`}>
                     {Math.round(step.probability * 100)}%

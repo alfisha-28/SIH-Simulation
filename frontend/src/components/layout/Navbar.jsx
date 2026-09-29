@@ -34,7 +34,7 @@ export default function Navbar() {
       label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}]` : 'Alerts',
       hasAlert: severeAlertsCount > 0
     },
-    { path: '/system', label: 'System Info' },
+    { path: '/panchayats', label: 'Panchayat Explorer' },
   ];
 
   return (
