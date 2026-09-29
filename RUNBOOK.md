@@ -84,5 +84,5 @@ npm run preview
 ---
 
 ## 5. Failure Recovery / Emergency Protocol
-- **Backend Unreachable**: If the backend is stopped, all 8 frontend screens display a stylized, graceful error banner with recovery instructions without crashing the app.
-- **Database Reset**: Re-run `PYTHONPATH=. ./venv/bin/python app/services/seed.py` inside `backend/` (or restart the docker container with auto-seed) to instantly restore standard seed events (`EVT-2026-001`, `EVT-2026-002`, `EVT-2026-003`).
+- **Backend Unreachable**: If the backend is stopped, the Overview, KVK Dashboard, Panchayat Explorer and Advisories screens keep working (they run on simulated data in the frontend). System / Data and the regional forecast-driver drill-downs display a graceful error banner with a Retry button instead of crashing.
+- **Database Reset**: Re-run `PYTHONPATH=. ./venv/bin/python app/services/seed.py` inside `backend/` (or restart the docker container with auto-seed) to instantly restore the standard seeded regional forecast drivers (`EVT-2026-001`, `EVT-2026-002`, `EVT-2026-003`).
