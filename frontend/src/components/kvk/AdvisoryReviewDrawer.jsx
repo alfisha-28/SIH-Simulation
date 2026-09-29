@@ -229,7 +229,7 @@ function Drawer({ advisoryId, onClose }) {
               </div>
             )}
             <p className="text-[11px] text-slate-500 leading-snug">
-              Downscaled Panchayat forecast with 10th&ndash;90th percentile ranges. Rain chance{' '}
+              Downscaled Panchayat forecast with 10th&ndash;90th percentile ranges. Chance of any rain (&ge;&nbsp;2.5&nbsp;mm){' '}
               {forecast ? formatPercent(forecast.rainProbability) : '--'}, confidence {forecast?.confidenceLevel ?? '--'}.
               Simulated data.
             </p>

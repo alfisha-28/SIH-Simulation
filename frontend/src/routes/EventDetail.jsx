@@ -5,6 +5,7 @@ import SeverityBadge from '../components/common/SeverityBadge';
 import ConfidenceBadge from '../components/common/ConfidenceBadge';
 import ErrorState from '../components/common/ErrorState';
 import EventMap from '../components/dashboard/EventMap';
+import PanchayatDetailNote from '../components/common/PanchayatDetailNote';
 import { formatEventType, formatTimestampUTC } from '../lib/format';
 
 export default function EventDetail() {
@@ -112,16 +113,16 @@ export default function EventDetail() {
           <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
             404
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Event Not Found</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Regional Weather System Not Found</h1>
           <p className="text-xs font-mono text-slate-500 max-w-md mx-auto">
-            The requested event identifier <span className="text-blue-600 font-bold">{eventId}</span> does not exist in the active intelligence database.
+            The requested regional forecast driver <span className="text-blue-600 font-bold">{eventId}</span> does not exist in the active forecast database.
           </p>
           <div className="pt-2">
             <Link
-              to="/events"
+              to="/system"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
             >
-              <span aria-hidden="true">←</span> Return to Events Explorer
+              <span aria-hidden="true">←</span> Return to System / Data
             </Link>
           </div>
         </div>
@@ -147,13 +148,13 @@ export default function EventDetail() {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
         <ErrorState
-          message={`Failed to load event intelligence for ${eventId}.`}
+          message={`Failed to load the regional forecast driver ${eventId}.`}
           detail={error}
           onRetry={loadData}
         />
         <div className="text-center">
-          <Link to="/events" className="text-xs text-blue-600 hover:underline">
-            <span aria-hidden="true">←</span> Back to Events
+          <Link to="/system" className="text-xs text-blue-600 hover:underline">
+            <span aria-hidden="true">←</span> Back to System / Data
           </Link>
         </div>
       </div>
@@ -165,19 +166,25 @@ export default function EventDetail() {
       {/* Top Breadcrumb */}
       <div>
         <Link
-          to="/events"
+          to="/system"
           className="text-xs font-mono text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center gap-1"
         >
-          <span aria-hidden="true">←</span> Back to Events Explorer
+          <span aria-hidden="true">←</span> Back to System / Data
         </Link>
       </div>
+
+      <title>{`${eventDetail.event_id} Regional Forecast Driver | WARSHA`}</title>
+      <PanchayatDetailNote />
 
       {/* Main Header Banner */}
       <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
+              <span
+                className="text-xs font-mono text-blue-600 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded"
+                title="Regional weather system ID (backend identifier)"
+              >
                 {eventDetail.event_id}
               </span>
               <span className="text-xs text-slate-500 font-mono capitalize">
@@ -193,7 +200,7 @@ export default function EventDetail() {
           <div className="flex flex-wrap items-center gap-2">
             <SeverityBadge severity={eventDetail.severity} className="text-sm px-3 py-1" />
             <div className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md font-mono text-xs text-blue-700 font-bold">
-              {Math.round(eventDetail.probability * 100)}% Probability
+              {Math.round(eventDetail.probability * 100)}% Forecast Probability
             </div>
             <ConfidenceBadge confidence={eventDetail.confidence} className="text-sm px-3 py-1" />
           </div>
@@ -233,7 +240,7 @@ export default function EventDetail() {
           <div className="border-b border-slate-100 pb-3">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-              Detection Explanation — Why Flagged?
+              Forecast Signal — Why Flagged?
             </h2>
             <p className="text-xs text-slate-500 mt-1">
               Extreme Forecast Index (EFI) anomaly breakdown against 20-year climatological normal.
@@ -312,10 +319,10 @@ export default function EventDetail() {
               <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Detection Narrative Summary</span>
+              <span>Forecast Signal Summary</span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed font-sans">
-              System flagged this event due to a dominant <strong className="text-slate-900">{primaryAnomaly?.name}</strong> of{' '}
+              This regional weather system was flagged due to a dominant <strong className="text-slate-900">{primaryAnomaly?.name}</strong> of{' '}
               <strong className="text-slate-900">{primaryAnomaly?.value?.toFixed(2)}</strong>. Multi-model ensemble agreement is at{' '}
               <strong className="text-slate-900">{Math.round(eventDetail.ensemble_agreement * 100)}%</strong>, {getConsensusPhrase(eventDetail.ensemble_agreement)} over {eventDetail.location_name}.
             </p>
@@ -328,10 +335,10 @@ export default function EventDetail() {
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                Tracking & Propagation Dynamics
+                Regional Footprint & Movement
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Spatial footprint and forecasted path across timesteps.
+                Regional footprint and forecast path across timesteps.
               </p>
             </div>
 
@@ -370,7 +377,7 @@ export default function EventDetail() {
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-              Impact Summary & Downstream Intelligence
+              Regional Impact Summary
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Assessed primary threat: <span className="text-slate-800 font-bold">{getImpactLabel(eventDetail.type)}</span>
@@ -379,7 +386,7 @@ export default function EventDetail() {
 
           {eventRisk && (
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-              <span className="text-slate-500 whitespace-nowrap">Current Risk Snapshot:</span>
+              <span className="text-slate-500 whitespace-nowrap">Regional Risk Snapshot:</span>
               <SeverityBadge severity={eventRisk.overall_risk} />
               <span className="text-slate-500">({eventRisk.impact_region_name})</span>
             </div>
@@ -392,7 +399,7 @@ export default function EventDetail() {
             to={`/events/${eventDetail.event_id}/forecast`}
             className="w-full sm:w-auto justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
-            <span>View Localized Forecast</span>
+            <span>View Regional Forecast</span>
             <span aria-hidden="true">→</span>
           </Link>
 
@@ -400,7 +407,7 @@ export default function EventDetail() {
             to={`/events/${eventDetail.event_id}/risk`}
             className="w-full sm:w-auto justify-center px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2"
           >
-            <span>View Risk Details</span>
+            <span>View Regional Risk</span>
             <span aria-hidden="true">→</span>
           </Link>
         </div>

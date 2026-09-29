@@ -203,10 +203,10 @@ export default function PanchayatPanel({ panchayatId, leadHours, mode, onSelectL
           note={PCT_NOTE}
         />
         <Metric
-          label="Rain probability"
+          label="Chance of any rain"
           value={formatPercent(active.rainProbability)}
           unit=""
-          range={'chance of ≥ 2.5 mm'}
+          range={'any rain, ≥ 2.5 mm'}
         />
       </div>
 

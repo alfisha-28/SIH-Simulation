@@ -6,8 +6,6 @@ import Layout from './components/layout/Layout';
 // Route level code splitting: each page (and the Leaflet map it may pull in)
 // only downloads when that route is actually visited.
 const Landing = lazy(() => import('./routes/Landing'));
-const Dashboard = lazy(() => import('./routes/Dashboard'));
-const EventExplorer = lazy(() => import('./routes/EventExplorer'));
 const EventDetail = lazy(() => import('./routes/EventDetail'));
 const EventForecast = lazy(() => import('./routes/EventForecast'));
 const EventRisk = lazy(() => import('./routes/EventRisk'));
@@ -24,8 +22,12 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Landing />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="events" element={<EventExplorer />} />
+            {/* The extreme-event command centre and Events Explorer were replaced by the
+                KVK Dashboard and the Panchayat Explorer: keep old links and bookmarks working. */}
+            <Route path="dashboard" element={<Navigate to="/kvk" replace />} />
+            <Route path="events" element={<Navigate to="/panchayats" replace />} />
+            {/* Internal drill-downs: the backend's regional weather systems (forecast drivers),
+                reached from System / Data. */}
             <Route path="events/:eventId" element={<EventDetail />} />
             <Route path="events/:eventId/forecast" element={<EventForecast />} />
             <Route path="events/:eventId/risk" element={<EventRisk />} />

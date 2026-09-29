@@ -100,9 +100,9 @@ export const HEATMAP_VARIABLES = Object.freeze([
   },
   {
     key: 'rainProbability',
-    label: 'Rain probability',
-    legendTitle: 'Rain probability (%)',
-    legendNote: 'Chance of at least 2.5 mm',
+    label: 'Any rain',
+    legendTitle: 'Chance of any rain (%)',
+    legendNote: 'Any rain = at least 2.5 mm',
     classes: classes(
       [0.1, 0.3, 0.5, 0.7, 0.9],
       ['#f5f3ff', '#ddd6fe', '#c4b5fd', '#8b5cf6', '#6d28d9', '#4c1d95'],

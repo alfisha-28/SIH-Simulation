@@ -172,7 +172,7 @@ export default function EventMap({
                       {evt.severity || 'info'}
                     </span>
                     <span className="text-slate-500">
-                      {Math.round((evt.probability || 0) * 100)}% prob
+                      {Math.round((evt.probability || 0) * 100)}% forecast prob.
                     </span>
                   </div>
                 </div>

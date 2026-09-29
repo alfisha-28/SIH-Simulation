@@ -39,8 +39,8 @@ export default function HighRiskTable({ rows, selectedId, onSelect, initialCount
               <th scope="col" className={HEAD}>Peak risk</th>
               <th scope="col" className={HEAD}>Condition</th>
               <th scope="col" className={HEAD}>When</th>
-              <th scope="col" className={HEAD} title="Chance of measurable rain (at least 2.5 mm) at the peak lead time">
-                Rain prob.
+              <th scope="col" className={HEAD} title="Chance of any rain (at least 2.5 mm) at the peak lead time, not the chance of the peak-risk threshold">
+                Any rain
               </th>
               <th scope="col" className={HEAD}>Key crop</th>
               <th scope="col" className={HEAD}>Advisory</th>
