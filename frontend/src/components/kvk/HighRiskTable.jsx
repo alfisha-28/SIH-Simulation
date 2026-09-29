@@ -83,16 +83,24 @@ export default function HighRiskTable({ rows, selectedId, onSelect, initialCount
                     <SeverityBadge severity={peak.risk} />
                   </td>
                   <td className="px-3 py-2 text-slate-800 whitespace-nowrap">{peak.forecast.condition}</td>
-                  <td className="px-3 py-2 text-slate-700 whitespace-nowrap font-mono text-xs">
-                    {peak.leadLabel}
-                    <span className="text-slate-400"> · </span>
-                    {peak.forecast.validTime}
+                  {/* Lead time over valid time (and crop over stage below): stacking keeps the
+                      table inside its card at desktop widths, so the Advisory column is never clipped. */}
+                  <td className="px-3 py-2 text-slate-700 font-mono text-xs">
+                    <span className="block whitespace-nowrap font-semibold">{peak.leadLabel}</span>
+                    <span className="block whitespace-nowrap text-slate-500">{peak.forecast.validTime}</span>
                   </td>
                   <td className="px-3 py-2 text-slate-700 tabular-nums font-mono text-xs">
                     {formatPercent(peak.forecast.rainProbability)}
                   </td>
-                  <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
-                    {keyCrop ? `${keyCrop.crop} · ${keyCrop.stage}` : '--'}
+                  <td className="px-3 py-2 text-slate-700">
+                    {keyCrop ? (
+                      <>
+                        <span className="block whitespace-nowrap">{keyCrop.crop}</span>
+                        <span className="block whitespace-nowrap text-xs text-slate-500">{keyCrop.stage}</span>
+                      </>
+                    ) : (
+                      '--'
+                    )}
                   </td>
                   <td className="px-3 py-2">
                     <AdvisoryStatusBadge status={advisory?.status ?? null} />

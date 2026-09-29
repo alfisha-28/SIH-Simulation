@@ -51,6 +51,12 @@ const DEFAULT_GP_ID = DEMO_PENDING_GP;
 // Latest workflow timestamp (ms) of an approved / sent advisory: newest first in Recent.
 const lastActivity = (a) => Date.parse(a.sentAt ?? a.approvedAt ?? '') || 0;
 
+// Seeded approvals carry fixed timestamps (lib/advisories.js) that can sit ahead of the
+// viewer's clock, so ordering by time alone could bury an advisory the user has just
+// approved or sent below the "Show all" fold. Anything the user acted on sorts first.
+const isUserAction = (a) =>
+  (a.approvedAt ?? null) !== (a.initialApprovedAt ?? null) || (a.sentAt ?? null) !== (a.initialSentAt ?? null);
+
 const segmentClass = (active) =>
   `px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
     active
@@ -154,7 +160,12 @@ export default function KvkDashboard() {
     () =>
       advisories
         .filter((a) => a.status !== ADVISORY_STATUS.PENDING)
-        .sort((a, b) => lastActivity(b) - lastActivity(a) || b.riskScore - a.riskScore),
+        .sort(
+          (a, b) =>
+            Number(isUserAction(b)) - Number(isUserAction(a)) ||
+            lastActivity(b) - lastActivity(a) ||
+            b.riskScore - a.riskScore
+        ),
     [advisories]
   );
   const farmersReached = useMemo(
