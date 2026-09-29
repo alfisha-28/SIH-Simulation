@@ -20,10 +20,10 @@ export default function Navbar() {
   const navItems = [
     { path: '/', label: 'Overview', end: true },
     { path: '/kvk', label: 'KVK Dashboard' },
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/events', label: 'Events Explorer', end: true },
-    { path: '/advisories', label: 'Advisories', badge: pendingCount, hasAlert: pendingCount > 0 },
     { path: '/panchayats', label: 'Panchayat Explorer' },
+    { path: '/advisories', label: 'Advisories', badge: pendingCount, hasAlert: pendingCount > 0 },
+    // The regional forecast-driver drill-downs (/events/:id/...) are reached from here.
+    { path: '/system', label: 'System / Data', alsoActiveFor: '/events/' },
   ];
 
   return (
@@ -46,7 +46,8 @@ export default function Navbar() {
                 // aria-label rather than an sr-only span: inside this horizontally
                 // scrolling nav an absolutely positioned span widens the whole page on phones.
                 aria-label={item.badge > 0 ? `${item.label}, ${item.badge} pending KVK review` : undefined}
-                className={({ isActive }) => {
+                className={({ isActive: routeActive }) => {
+                  const isActive = routeActive || (item.alsoActiveFor && location.pathname.startsWith(item.alsoActiveFor));
                   let activeClass = 'bg-blue-50 text-blue-600 border border-blue-200';
                   if (item.hasAlert && isActive) {
                     activeClass = 'bg-red-50 text-red-600 border border-red-200';

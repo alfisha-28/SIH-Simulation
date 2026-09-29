@@ -14,16 +14,22 @@ export default function NotFound() {
         </p>
         <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
           <Link
-            to="/dashboard"
+            to="/"
             className="inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
           >
-            Go to Dashboard
+            Go to Overview
           </Link>
           <Link
-            to="/events"
-            className="inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-lg bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+            to="/kvk"
+            className="inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-300 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
           >
-            Go to Events Explorer
+            Go to KVK Dashboard
+          </Link>
+          <Link
+            to="/panchayats"
+            className="inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-300 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+          >
+            Go to Panchayat Explorer
           </Link>
         </div>
       </div>
