@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import SeverityBadge from '../components/common/SeverityBadge';
 import ConfidenceBadge from '../components/common/ConfidenceBadge';
+import PanchayatDetailNote from '../components/common/PanchayatDetailNote';
 import ErrorState from '../components/common/ErrorState';
 import TimelineSlider from '../components/common/TimelineSlider';
 
@@ -87,16 +88,16 @@ export default function EventForecast() {
           <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto text-xl font-bold font-mono">
             404
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Event Forecast Not Found</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Regional Forecast Not Found</h1>
           <p className="text-xs font-mono text-slate-500 max-w-md mx-auto">
-            No active downscaled forecast matching identifier <span className="text-blue-600 font-bold">{eventId}</span> was found.
+            No active regional forecast matching identifier <span className="text-blue-600 font-bold">{eventId}</span> was found.
           </p>
           <div className="pt-2">
             <Link
-              to="/events"
+              to="/system"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
             >
-              ← Return to Events Explorer
+              ← Return to System / Data
             </Link>
           </div>
         </div>
@@ -123,12 +124,12 @@ export default function EventForecast() {
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-4">
         <ErrorState
-          message={`Can't load the localized forecast for ${eventId}.`}
+          message={`Can't load the regional forecast for ${eventId}.`}
           detail={error}
           onRetry={loadData}
         />
-        <Link to="/events" className="text-xs text-blue-600 hover:underline">
-          ← Back to Events
+        <Link to="/system" className="text-xs text-blue-600 hover:underline">
+          ← Back to System / Data
         </Link>
       </div>
     );
@@ -168,15 +169,15 @@ export default function EventForecast() {
       {/* Navigation Breadcrumbs & Cross-links */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-2 text-xs font-mono text-slate-500">
-          <Link to="/events" className="hover:text-blue-600 transition-colors">
-            Events
+          <Link to="/system" className="hover:text-blue-600 transition-colors">
+            System / Data
           </Link>
           <span>/</span>
           <Link to={`/events/${eventId}`} className="hover:text-blue-600 transition-colors text-slate-700">
             {eventId}
           </Link>
           <span>/</span>
-          <span className="text-blue-600 font-bold">Localized Forecast</span>
+          <span className="text-blue-600 font-bold">Regional Forecast</span>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -184,7 +185,7 @@ export default function EventForecast() {
             to={`/events/${eventId}`}
             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5"
           >
-            ← Event Overview
+            ← Regional Overview
           </Link>
           <Link
             to={`/events/${eventId}/risk`}
@@ -195,6 +196,9 @@ export default function EventForecast() {
           </Link>
         </div>
       </div>
+
+      <title>{`${eventId} Regional Forecast | WARSHA`}</title>
+      <PanchayatDetailNote />
 
       {/* Main Header Banner */}
       <div className="bg-white border border-[#D9E4EE] rounded-xl p-6 shadow-sm space-y-4">
@@ -209,7 +213,7 @@ export default function EventForecast() {
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-wide">
-              Localized High-Resolution Forecast
+              Regional High-Resolution Forecast
               {eventDetail && <span className="text-slate-500 font-normal"> — {eventDetail.location_name} ({formatEventType(eventDetail.type)})</span>}
             </h1>
           </div>
@@ -245,10 +249,10 @@ export default function EventForecast() {
         </div>
         <div className="space-y-1 text-xs text-slate-700">
           <h3 className="font-bold text-blue-700 uppercase tracking-wider font-mono">
-            Targeted Resolution Downscaling — 12 km → 5 km Anomaly Focus
+            Regional Downscaling — 12 km → 5 km Focus
           </h3>
           <p className="leading-relaxed font-sans text-slate-600">
-            Rather than running computationally expensive high-resolution forecasting across the entire global domain, our system dynamically focuses 5 km regional neural-downscaling specifically on the localized region surrounding a detected anomaly. This uncovers fine-scale extreme intensities, localized peak rainfall rates, and terrain-channeled winds that coarse 12 km global models smooth out.
+            Rather than running computationally expensive high-resolution forecasting across the whole domain, the system focuses 5 km neural downscaling on the region around this regional forecast driver. This uncovers fine-scale extreme intensities, peak rainfall rates and terrain-channeled winds that coarse 12 km models smooth out. The Panchayat Explorer applies the same idea at a 2–3 km prototype grid, aggregated to Gram Panchayat boundaries.
           </p>
         </div>
       </div>

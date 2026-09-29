@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component {
 
             <div className="space-y-2">
               <h1 className="text-xl font-bold font-mono uppercase tracking-wider text-red-400">
-                Weather Command Center Error
+                WARSHA Application Error
               </h1>
               <p className="text-xs font-mono text-slate-400">
                 An unhandled application exception occurred during rendering.

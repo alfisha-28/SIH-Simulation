@@ -1,6 +1,6 @@
 // Single source of truth for severity / risk level styling and labels.
 // Import from here instead of re-declaring a color map in a component
-// (SeverityBadge, TimelineSlider, KeyMetricsPanel, Alerts, mapIcons all
+// (SeverityBadge, TimelineSlider, Advisories, KVK dashboard, Panchayat map, mapIcons all
 // need the same four buckets to stay in sync).
 //
 // Backend vocabulary is severe | moderate | low. 'high' and legacy aliases
