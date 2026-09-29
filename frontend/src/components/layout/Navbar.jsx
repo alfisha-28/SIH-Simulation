@@ -27,6 +27,7 @@ export default function Navbar() {
 
   const navItems = [
     { path: '/', label: 'Overview', end: true },
+    { path: '/kvk', label: 'KVK Dashboard' },
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/events', label: 'Events Explorer', end: true },
     {
