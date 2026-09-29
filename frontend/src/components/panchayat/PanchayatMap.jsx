@@ -50,16 +50,26 @@ const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const BOUNDS_OPTIONS = { padding: [10, 10] };
+// On phones the legend sits over the south-west corner of the data and touch
+// dragging is off, so keep the fit clear of it by reserving room at the bottom.
+const NARROW_BOUNDS_OPTIONS = { paddingTopLeft: [10, 10], paddingBottomRight: [10, 64] };
+const NARROW_MAX_WIDTH_PX = 640;
 
 const FILL_OPACITY = 0.7;
 const MUTED_FILL = '#94a3b8';
 
+// Leaflet's Path.setStyle MERGES a new pathOptions object into the old one, so a
+// key the new style omits keeps its previous value. Every style below therefore
+// spells out the keys that another style changes (stroke, fill, dashArray);
+// otherwise switching Coarse -> Downscaled would leave the GP borders off
+// (stroke:false) and the selection outline dashed.
+//
 // Coarse mode: GP polygons are invisible hit targets on top of the block fill.
 const HIT_STYLE = { stroke: false, fill: true, fillColor: '#000000', fillOpacity: 0 };
-const HOVER_STYLE = { color: '#0f172a', weight: 2.5, opacity: 0.85, fill: false };
-const SELECTED_GP_STYLE = { color: '#0f172a', weight: 3.5, opacity: 1, fill: false };
+const HOVER_STYLE = { stroke: true, color: '#0f172a', weight: 2.5, opacity: 0.85, fill: false, dashArray: null };
+const SELECTED_GP_STYLE = { stroke: true, color: '#0f172a', weight: 3.5, opacity: 1, fill: false, dashArray: null };
 const SELECTED_GP_COARSE_STYLE = { ...SELECTED_GP_STYLE, weight: 2.5, dashArray: '5 4' };
-const SELECTED_BLOCK_STYLE = { color: '#0f172a', weight: 3, opacity: 0.9, fill: false };
+const SELECTED_BLOCK_STYLE = { stroke: true, color: '#0f172a', weight: 3, opacity: 0.9, fill: false, dashArray: null };
 
 // Leaflet only re-measures its container on window resize. The container can
 // also change size on its own (scrollbar appearing, web font swap, the layout
@@ -116,6 +126,8 @@ export default function PanchayatMap({
       const style = isCoarse
         ? HIT_STYLE
         : {
+            stroke: true,
+            fill: true,
             color: '#ffffff',
             weight: 1.2,
             opacity: 0.95,
@@ -132,6 +144,8 @@ export default function PanchayatMap({
           return {
             block,
             style: {
+              stroke: true,
+              fill: true,
               color: '#ffffff',
               weight: 2,
               opacity: 1,
@@ -148,13 +162,23 @@ export default function PanchayatMap({
   const selectedBlock = selected ? getBlock(selected.blockId) : null;
   const hovered = hoveredId && hoveredId !== selectedId ? getPanchayat(hoveredId) : null;
   const lead = LEAD_TIMES.find((l) => l.hours === leadHours);
+  // Read once: the fit only runs on mount anyway.
+  const [boundsOptions] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < NARROW_MAX_WIDTH_PX ? NARROW_BOUNDS_OPTIONS : BOUNDS_OPTIONS
+  );
 
   return (
     <div
       role="region"
       aria-label="Panchayat forecast map. Use the Panchayat selector to choose a Panchayat with the keyboard."
-      className={`relative isolate w-full rounded-xl overflow-hidden border border-[#D9E4EE] shadow-sm bg-slate-200 ${
-        height ? '' : 'h-[420px] sm:h-[480px] lg:h-[560px]'
+      // Leaflet gives every polygon <path> a focus listener (for its tooltip),
+      // which makes Chrome draw a rectangular focus ring around the path's
+      // bounding box after a mouse click. The selection outline already marks
+      // the polygon, so suppress that ring.
+      className={`relative isolate w-full rounded-xl overflow-hidden border border-[#D9E4EE] shadow-sm bg-slate-200 [&_path.leaflet-interactive:focus]:outline-none ${
+        // Heights chosen so the fit lands on a whole zoom level from tablet up:
+        // fractional zoom scales the tiles and leaves white seams at DPR 1.
+        height ? '' : 'h-[460px] sm:h-[540px] lg:h-[560px]'
       } ${className}`}
       style={height ? { height } : undefined}
     >
@@ -181,7 +205,7 @@ export default function PanchayatMap({
 
       <MapContainer
         bounds={DATA_BOUNDS}
-        boundsOptions={BOUNDS_OPTIONS}
+        boundsOptions={boundsOptions}
         zoomSnap={0.5}
         minZoom={7}
         scrollWheelZoom={false}
@@ -201,7 +225,15 @@ export default function PanchayatMap({
             positions={gp.polygon}
             pathOptions={style}
             eventHandlers={{
-              click: () => onSelect?.(gp.id),
+              // Not a Tab stop: the polygons have no keyboard action, the
+              // Panchayat selector is the keyboard alternative.
+              add: (e) => e.target.getElement?.()?.setAttribute('tabindex', '-1'),
+              click: (e) => {
+                onSelect?.(gp.id);
+                // A tap leaves Leaflet's sticky tooltip stuck open (and clipped
+                // at the map edge); the side panel already shows the values.
+                if (L.Browser.mobile) e.target.closeTooltip();
+              },
               mouseover: () => setHoveredId(gp.id),
               mouseout: () => setHoveredId((current) => (current === gp.id ? null : current)),
             }}
@@ -228,6 +260,9 @@ export default function PanchayatMap({
         )}
         {selected && (
           <Polygon
+            // Keyed by mode so it is re-added after the block fills that mount
+            // on the switch to coarse; otherwise it would sit underneath them.
+            key={`selected-${mode}`}
             positions={selected.polygon}
             pathOptions={isCoarse ? SELECTED_GP_COARSE_STYLE : SELECTED_GP_STYLE}
             interactive={false}

@@ -13,11 +13,14 @@
 // no Date.now(), so the data is identical on every load.
 //
 // ---- Geography ------------------------------------------------------------
-// 3 districts (Surat, Navsari, Valsad) > 9 blocks (talukas) > 54 GPs, roughly
-// 65 x 65 km of South Gujarat. Block outlines share vertices, so blocks tile
+// 3 districts (Surat, Navsari, Valsad) > 8 blocks (talukas) > 50 GPs, roughly
+// 70 x 60 km of South Gujarat. Block outlines share vertices, so blocks tile
 // the region without gaps or overlaps; GP polygons are Voronoi cells clipped to
 // their block, so they tile each block exactly. All polygons sit on land (the
-// coast is the western edge, drawn slightly inland of the real shoreline).
+// coast is the western edge, drawn slightly inland of the real shoreline; the
+// Hazira spit and the Tapi estuary are deliberately left out). Block outlines
+// are placed over the real taluka headquarters, and BLOCK_ANCHORS (below) pins
+// that down: findPanchayatAt(anchor) must land in the named block.
 //
 // ---- Exports --------------------------------------------------------------
 // Deep link: /panchayats?gp=<GP id>&t=<lead hours> opens the Panchayat Explorer on that GP.
@@ -112,7 +115,7 @@ import {
   toXY,
   valueNoise,
   voronoiCell,
-} from './panchayatGeometry';
+} from './panchayatGeometry.js';
 
 export const DATASET_LABEL = 'Simulated data';
 export const DATASET_NOTE =
@@ -129,8 +132,12 @@ export function formatLeadHours(hours) {
   return hours === 0 ? 'Now' : `+${hours}h`;
 }
 
-const validTimeLabel = (hours) =>
-  `${String((BASE_HOUR_IST + hours) % 24).padStart(2, '0')}:00 IST`;
+// The day marker keeps Now / +24h / +48h (all 08:00) from reading as the same time.
+const validTimeLabel = (hours) => {
+  const clock = `${String((BASE_HOUR_IST + hours) % 24).padStart(2, '0')}:00 IST`;
+  const day = Math.floor((BASE_HOUR_IST + hours) / 24);
+  return day > 0 ? `${clock} (D+${day})` : clock;
+};
 
 export const LEAD_TIMES = Object.freeze(
   [0, 6, 12, 24, 48].map((hours) =>
@@ -168,14 +175,21 @@ function riskFromThresholds(value, [moderate, high, severe]) {
 // row 3 the southern edge, col 0 the coast and col 3 the eastern edge. Blocks
 // reference vertices by key, so neighbouring blocks share their edges exactly.
 const V = {
-  p00: [21.12, 72.64], p01: [21.14, 72.84], p02: [21.15, 73.02], p03: [21.14, 73.19],
-  p10: [20.985, 72.75], p11: [20.99, 72.905], p12: [20.985, 73.075], p13: [20.97, 73.24],
-  p20: [20.77, 72.858], p21: [20.765, 72.985], p22: [20.775, 73.125], p23: [20.77, 73.27],
-  p30: [20.55, 72.9], p31: [20.555, 73.07], p32: [20.545, 73.2], p33: [20.55, 73.31],
+  // North edge: c0 is where the Choryasi block starts on the south bank of the
+  // Tapi (the Hazira spit and the estuary itself are not part of the dataset).
+  c0: [21.125, 72.712], p01: [21.14, 72.84], p02: [21.15, 73.03], p03: [21.14, 73.2],
+  // Row 1 (northern edge of the Navsari district blocks). p12b and p13 are the
+  // Bardoli | Navsari / Chikhli boundary: Bardoli takes in Mahuva to its south.
+  p10: [20.985, 72.75], p11: [20.99, 72.892], p12: [20.985, 73.03],
+  p12b: [20.925, 73.03], p13: [20.92, 73.25],
+  // Row 2: the Navsari | Valsad edge and the Chikhli | Dharampur edge.
+  p20: [20.77, 72.858], p21: [20.765, 72.985], p22: [20.7, 73.0], p23: [20.69, 73.27],
+  // Row 3 (southern edge): Dharampur reaches about 20.505 N so Dharampur town is inside.
+  p30: [20.55, 72.9], p31: [20.555, 73.05], p32: [20.505, 73.2], p33: [20.505, 73.28],
   // Shoreline shape points, each about 1 km inland of the OpenStreetMap
   // coastline so the polygons hug the coast without ever covering the sea.
-  // Choryasi: the Hazira peninsula (its southern shore runs east-west) ...
-  c1: [21.065, 72.648], c2: [21.062, 72.735], c3: [21.03, 72.738],
+  // Choryasi: the Dumas coast on the south bank of the Tapi estuary ...
+  c1: [21.086, 72.709], c2: [21.072, 72.742], c3: [21.03, 72.74],
   // ... Jalalpore (Ubhrat, Dandi, Matwad coast) ...
   k1: [20.8, 72.85], k2: [20.85, 72.826], k3: [20.9, 72.8], k4: [20.94, 72.772],
   // ... and the Valsad coast (Tithal).
@@ -185,7 +199,7 @@ const V = {
 // Approximate shoreline [lat, lon] north -> south (traced from OpenStreetMap),
 // used only by the wind model's distance-to-coast term.
 const SHORELINE = [
-  [21.13, 72.62], [21.06, 72.64], [21.05, 72.723], [20.98, 72.738], [20.905, 72.79],
+  [21.13, 72.7], [21.075, 72.703], [21.05, 72.723], [20.98, 72.738], [20.905, 72.79],
   [20.83, 72.822], [20.775, 72.842], [20.7, 72.86], [20.61, 72.891], [20.55, 72.886],
 ];
 
@@ -219,11 +233,11 @@ const CROP = {
 const BLOCK_DEFS = [
   {
     id: 'choryasi', name: 'Choryasi', districtId: 'surat',
-    ring: ['p00', 'p01', 'p11', 'p10', 'c3', 'c2', 'c1'],
+    ring: ['c0', 'p01', 'p11', 'p10', 'c3', 'c2', 'c1'],
     gps: [
-      ['Hazira', 0.1, 0.12, [CROP.paddyFlower, CROP.okra], 1180],
-      ['Suvali', 0.45, 0.1, [CROP.paddyFlower, CROP.brinjal], 960],
-      ['Dumas', 0.15, 0.55, [CROP.paddyFill, CROP.cane], 1420],
+      ['Dumas', 0.12, 0.2, [CROP.paddyFill, CROP.cane], 1420],
+      ['Magdalla', 0.5, 0.08, [CROP.paddyFlower, CROP.brinjal], 960],
+      ['Gavier', 0.12, 0.6, [CROP.paddyFlower, CROP.okra], 1180],
       ['Bhimpor', 0.6, 0.4, [CROP.cane, CROP.paddyFlower], 1650],
       ['Sultanabad', 0.3, 0.9, [CROP.cane, CROP.banana], 1310],
       ['Kansad', 0.85, 0.75, [CROP.cottonFlower, CROP.cane], 1890],
@@ -243,14 +257,14 @@ const BLOCK_DEFS = [
   },
   {
     id: 'bardoli', name: 'Bardoli', districtId: 'surat',
-    ring: ['p02', 'p03', 'p13', 'p12'],
+    ring: ['p02', 'p03', 'p13', 'p12b', 'p12'],
     gps: [
-      ['Kadod', 0.25, 0.15, [CROP.cane, CROP.paddyFlower], 2480],
-      ['Isanpor', 0.8, 0.2, [CROP.cane, CROP.cottonFlower], 1930],
-      ['Sarbhon', 0.2, 0.55, [CROP.cane, CROP.paddyFill], 2050],
-      ['Afva', 0.75, 0.5, [CROP.cane, CROP.banana], 1610],
-      ['Haripura', 0.25, 0.9, [CROP.paddyFlower, CROP.cane], 1470],
-      ['Vaghecha', 0.8, 0.88, [CROP.cottonBoll, CROP.cane], 1820],
+      ['Kadod', 0.25, 0.12, [CROP.cane, CROP.paddyFlower], 2480],
+      ['Isanpor', 0.8, 0.15, [CROP.cane, CROP.cottonFlower], 1930],
+      ['Sarbhon', 0.2, 0.5, [CROP.cane, CROP.paddyFill], 2050],
+      ['Afva', 0.75, 0.45, [CROP.cane, CROP.banana], 1610],
+      ['Haripura', 0.25, 0.88, [CROP.paddyFlower, CROP.cane], 1470],
+      ['Vaghecha', 0.8, 0.85, [CROP.cottonBoll, CROP.cane], 1820],
     ],
   },
   {
@@ -267,7 +281,7 @@ const BLOCK_DEFS = [
   },
   {
     id: 'navsari', name: 'Navsari', districtId: 'navsari',
-    ring: ['p11', 'p12', 'p22', 'p21'],
+    ring: ['p11', 'p12', 'p12b', 'p22', 'p21'],
     gps: [
       ['Kabilpor', 0.2, 0.1, [CROP.cane, CROP.banana], 1720],
       ['Maroli', 0.75, 0.12, [CROP.cottonBoll, CROP.cane], 1610],
@@ -280,9 +294,9 @@ const BLOCK_DEFS = [
   },
   {
     id: 'chikhli', name: 'Chikhli', districtId: 'navsari',
-    ring: ['p12', 'p13', 'p23', 'p22'],
+    ring: ['p12b', 'p13', 'p23', 'p22'],
     gps: [
-      ['Rankuwa', 0.2, 0.1, [CROP.sapota, CROP.mango], 1480],
+      ['Rankuwa', 0.25, 0.1, [CROP.sapota, CROP.mango], 1480],
       ['Alipor', 0.75, 0.12, [CROP.banana, CROP.cane], 1390],
       ['Sadadvel', 0.45, 0.35, [CROP.cottonFlower, CROP.cane], 1140],
       ['Talavchora', 0.15, 0.55, [CROP.paddyFlower, CROP.mango], 1030],
@@ -293,7 +307,7 @@ const BLOCK_DEFS = [
   },
   {
     id: 'valsad', name: 'Valsad', districtId: 'valsad',
-    ring: ['p20', 'p21', 'p31', 'p30', 'v1', 'v2', 'v3', 'v4'],
+    ring: ['p20', 'p21', 'p22', 'p31', 'p30', 'v1', 'v2', 'v3', 'v4'],
     gps: [
       ['Halar', 0.25, 0.1, [CROP.mango, CROP.paddyFlower], 880],
       ['Bhagda', 0.8, 0.15, [CROP.paddyFlower, CROP.brinjal], 1010],
@@ -305,24 +319,14 @@ const BLOCK_DEFS = [
   },
   {
     id: 'dharampur', name: 'Dharampur', districtId: 'valsad',
-    ring: ['p21', 'p22', 'p32', 'p31'],
+    ring: ['p22', 'p23', 'p33', 'p32', 'p31'],
     gps: [
-      ['Barumal', 0.25, 0.15, [CROP.paddyFlower, CROP.nagli], 870],
-      ['Sidumbar', 0.8, 0.2, [CROP.nagli, CROP.tur], 780],
-      ['Moti Vahiyal', 0.5, 0.5, [CROP.paddyFill, CROP.mango], 920],
-      ['Bhavthan', 0.2, 0.88, [CROP.nagli, CROP.paddyFlower], 830],
-      ['Ambosi', 0.8, 0.85, [CROP.tur, CROP.nagli], 760],
-    ],
-  },
-  {
-    id: 'kaprada', name: 'Kaprada', districtId: 'valsad',
-    ring: ['p22', 'p23', 'p33', 'p32'],
-    gps: [
-      ['Kaprada', 0.25, 0.15, [CROP.paddyFlower, CROP.nagli], 940],
-      ['Nana Pondha', 0.8, 0.2, [CROP.nagli, CROP.tur], 720],
-      ['Kakadkopar', 0.5, 0.5, [CROP.paddyFill, CROP.nagli], 810],
-      ['Dhamni', 0.2, 0.88, [CROP.paddyFlower, CROP.mango], 690],
-      ['Manekpada', 0.8, 0.85, [CROP.nagli, CROP.tur], 650],
+      ['Barumal', 0.2, 0.12, [CROP.paddyFlower, CROP.nagli], 870],
+      ['Sidumbar', 0.75, 0.15, [CROP.nagli, CROP.tur], 780],
+      ['Moti Vahiyal', 0.45, 0.45, [CROP.paddyFill, CROP.mango], 920],
+      ['Dhamni', 0.88, 0.55, [CROP.paddyFlower, CROP.mango], 690],
+      ['Bhavthan', 0.15, 0.8, [CROP.nagli, CROP.paddyFlower], 830],
+      ['Ambosi', 0.6, 0.88, [CROP.tur, CROP.nagli], 760],
     ],
   },
 ];
@@ -357,6 +361,17 @@ function assignByHint(hints, cellUVs) {
 }
 
 const round1 = (v) => Math.round(v * 10) / 10;
+
+// Recursively freezes plain objects/arrays so a consumer that mutates a GP, block
+// or forecast (they are shared, cached objects) fails loudly instead of
+// silently corrupting every page.
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(deepFreeze);
+    Object.freeze(value);
+  }
+  return value;
+}
 const AREA_KM2 = KM_PER_DEG * KM_PER_DEG;
 
 function buildGeography() {
@@ -418,9 +433,9 @@ function buildGeography() {
 
 const GEO = buildGeography();
 
-export const DISTRICTS = Object.freeze(GEO.districts);
-export const BLOCKS = Object.freeze(GEO.blocks);
-export const PANCHAYATS = Object.freeze(GEO.panchayats);
+export const DISTRICTS = deepFreeze(GEO.districts);
+export const BLOCKS = deepFreeze(GEO.blocks);
+export const PANCHAYATS = deepFreeze(GEO.panchayats);
 
 const GP_BY_ID = new Map(PANCHAYATS.map((g) => [g.id, g]));
 const BLOCK_BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
@@ -449,6 +464,31 @@ export const DATA_BOUNDS = Object.freeze([
   [Math.min(...allLats), Math.min(...allLons)],
   [Math.max(...allLats), Math.max(...allLons)],
 ]);
+
+// Real taluka headquarters (or a well-known town in the taluka) with the block
+// that must contain each one. The blocks are placed against these, so a base map
+// label such as "Chikhli" or "Dharampur" never sits inside a differently named
+// block. [name, blockId, lat, lon]
+export const BLOCK_ANCHORS = Object.freeze([
+  ['Surat Airport (Dumas)', 'choryasi', 21.1141, 72.7418],
+  ['Palsana', 'palsana', 21.1113, 72.9587],
+  ['Bardoli', 'bardoli', 21.1236, 73.1128],
+  ['Mahuva', 'bardoli', 21.018, 73.139],
+  ['Jalalpore', 'jalalpore', 20.933, 72.905],
+  ['Navsari', 'navsari', 20.95, 72.93],
+  ['Chikhli', 'chikhli', 20.758, 73.06],
+  ['Valsad', 'valsad', 20.61, 72.93],
+  ['Dharampur', 'dharampur', 20.536, 73.174],
+]);
+
+// Dev-time guard for the table above (import.meta.env is undefined under plain Node).
+if (import.meta.env?.DEV) {
+  for (const [name, blockId, lat, lon] of BLOCK_ANCHORS) {
+    if (findPanchayatAt(lat, lon)?.blockId !== blockId) {
+      console.error(`panchayatData: ${name} (${lat}, ${lon}) is not inside the ${blockId} block`);
+    }
+  }
+}
 
 // ---- weather scenario --------------------------------------------------------
 
@@ -514,7 +554,7 @@ const gauss = (d, sigma) => Math.exp(-0.5 * (d / sigma) ** 2);
 // Embedded convective cell: an extra rain enhancement centred on Vijalpor, so
 // the Jalalpore block average hides a local hotspot.
 const HOTSPOT_GP_ID = 'vijalpor';
-const HOTSPOT_GAIN = 0.62;
+const HOTSPOT_GAIN = 0.95;
 const HOTSPOT_SIGMA_KM = 6;
 const HOTSPOT_CENTRE = GP_BY_ID.get(HOTSPOT_GP_ID).centroid;
 
@@ -638,11 +678,12 @@ function buildForecast({ gpId, blockId, mode, leadHours, rain, temp, wind, rainS
   // P(rain >= 2.5 mm): an ensemble-fraction style occurrence probability. Whether
   // it rains at all is far less certain than how much, hence the wider spread.
   const occurrenceSigma = 2.5 + 0.35 * rainfallMm + 0.06 * leadHours;
-  const rainProbability = clamp(1 - normalCdf((LIGHT_RAIN_MM - rainfallMm) / occurrenceSigma), 0, 1);
+  // Capped at 0.99 like hazardProbability: an ensemble is never quite certain.
+  const rainProbability = clamp(1 - normalCdf((LIGHT_RAIN_MM - rainfallMm) / occurrenceSigma), 0, 0.99);
 
   const confidence = clamp(confidenceBase, 0.3, 0.97);
   const lead = LEAD_TIMES.find((l) => l.hours === leadHours);
-  return {
+  return deepFreeze({
     gpId,
     blockId,
     mode,
@@ -664,7 +705,7 @@ function buildForecast({ gpId, blockId, mode, leadHours, rain, temp, wind, rainS
     riskScore: Math.round(riskScore * 1000) / 1000,
     condition,
     ...extra,
-  };
+  });
 }
 
 // ---- forecast tables (built once, lazily) -------------------------------------

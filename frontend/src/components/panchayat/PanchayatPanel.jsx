@@ -10,7 +10,7 @@ import SeverityBadge from '../common/SeverityBadge';
 import ConfidenceBadge from '../common/ConfidenceBadge';
 import {
   capitalize,
-  formatDelta,
+  formatDeltaOf,
   formatPercent,
   formatRainMm,
   formatRange,
@@ -252,21 +252,21 @@ export default function PanchayatPanel({ panchayatId, leadHours, mode, onSelectL
               label="Rain mm"
               block={formatRainMm(coarse.rainfallMm)}
               gp={formatRainMm(downscaled.rainfallMm)}
-              delta={formatDelta(downscaled.rainfallMm - coarse.rainfallMm, formatRainMm)}
+              delta={formatDeltaOf(downscaled.rainfallMm, coarse.rainfallMm, formatRainMm)}
               activeColumn={mode}
             />
             <CompareRow
               label={'Temp °C'}
               block={formatTempC(coarse.temperatureC)}
               gp={formatTempC(downscaled.temperatureC)}
-              delta={formatDelta(downscaled.temperatureC - coarse.temperatureC, formatTempC)}
+              delta={formatDeltaOf(downscaled.temperatureC, coarse.temperatureC, formatTempC)}
               activeColumn={mode}
             />
             <CompareRow
               label="Wind km/h"
               block={formatWindKmh(coarse.windKmh)}
               gp={formatWindKmh(downscaled.windKmh)}
-              delta={formatDelta(downscaled.windKmh - coarse.windKmh, formatWindKmh)}
+              delta={formatDeltaOf(downscaled.windKmh, coarse.windKmh, formatWindKmh)}
               activeColumn={mode}
             />
             <CompareRow

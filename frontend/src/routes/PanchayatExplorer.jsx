@@ -254,13 +254,13 @@ export default function PanchayatExplorer() {
             timeline={timeline}
             selectedIndex={leadIndex}
             onSelectIndex={selectLeadIndex}
-            title={`Forecast timeline · ${selected.name}`}
+            title={`Forecast timeline · ${mode === 'coarse' ? `${selected.blockName} block` : selected.name}`}
             stepGridClassName="grid-cols-5"
             showStepOffsets={false}
           />
           <p className="text-xs text-slate-500">
             Percentages under each step are the rain probability (chance of at least 2.5&nbsp;mm in the 24&nbsp;h
-            ending at that time) for the selected Panchayat.
+            ending at that time) {mode === 'coarse' ? `for the ${selected.blockName} block, shared by all its Panchayats` : 'for the selected Panchayat'}.
           </p>
           {/* Wide layout: sits under the timeline. Narrow layout renders it after the panel instead (below). */}
           <div className="hidden lg:block">{blockComparison}</div>

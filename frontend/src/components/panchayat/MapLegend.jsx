@@ -18,10 +18,12 @@ export default function MapLegend({ variable, className = '' }) {
         <span className="text-[10px] text-slate-500">{def.legendNote}</span>
       </div>
       <ul className="mt-1.5 flex">
-        {def.classes.map((c) => (
+        {def.classes.map((c, i) => (
           <li key={c.label} className="flex-1 min-w-0 sm:flex-none sm:w-12 text-center">
             <span
-              className="block h-2.5 border border-white/80 first:rounded-l last:rounded-r"
+              className={`block h-2.5 border border-white/80 ${i === 0 ? 'rounded-l' : ''} ${
+                i === def.classes.length - 1 ? 'rounded-r' : ''
+              }`}
               style={{ backgroundColor: c.color }}
               aria-hidden="true"
             />

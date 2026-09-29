@@ -122,7 +122,7 @@ export default function TimelineSlider({
             <span className="text-blue-700 font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 rounded">
               {currentStep.timestep_label}
             </span>
-            <span className="text-slate-500">({currentStep.timestep_hours_offset}h)</span>
+            {showStepOffsets && <span className="text-slate-500">({currentStep.timestep_hours_offset}h)</span>}
             {currentStep.risk_level && (
               <span
                 className={`px-2 py-0.5 border rounded uppercase font-bold text-[10px] ${getRiskBadgeColor(

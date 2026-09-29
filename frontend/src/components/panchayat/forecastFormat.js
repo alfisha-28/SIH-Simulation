@@ -25,4 +25,12 @@ export function formatDelta(value, format, unit = '') {
   return `${value > 0 ? '+' : '−'}${text}${unit}`;
 }
 
+// Difference of two values as the reader sees them: computed from the displayed
+// (rounded) numbers so the table never shows 95 - 67 = +29.
+export function formatDeltaOf(next, base, format, unit = '') {
+  if (isMissing(next) || isMissing(base)) return '--';
+  const diff = Number(format(next)) - Number(format(base));
+  return formatDelta(Math.round(diff * 10) / 10, format, unit);
+}
+
 export const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');

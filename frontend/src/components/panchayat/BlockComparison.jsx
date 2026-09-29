@@ -44,7 +44,7 @@ export default function BlockComparison({ panchayatId, leadHours, mode, variable
               : `Downscaled view: each of the ${members.length} has its own value.`}
           </p>
         </div>
-        <div className="text-right text-xs font-mono text-slate-600">
+        <div className="sm:text-right text-xs font-mono text-slate-600">
           <div>
             Block forecast <span className="font-bold text-slate-900">{formatRainMm(blockForecast.rainfallMm)} mm</span>
           </div>
