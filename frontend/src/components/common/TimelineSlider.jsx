@@ -12,6 +12,10 @@ export default function TimelineSlider({
   // The small "+6h" line under each step label. Callers whose labels already
   // read "Now" / "+6h" turn it off instead of printing the same text twice.
   showStepOffsets = true,
+  // Play normally continues from the current step. Callers that open on a
+  // middle step (the Panchayat Explorer lands on the peak lead) set this so
+  // Play always replays the whole timeline from the first step.
+  playFromStart = false,
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const canPlay = timeline.length > 1;
@@ -46,6 +50,15 @@ export default function TimelineSlider({
     }, 2200);
     return () => clearInterval(timer);
   }, [isPlaying, canPlay, timeline.length, onSelectIndex]);
+
+  // Pressing Play on the last step (or with playFromStart) restarts from the
+  // first step; otherwise it would stop again straight away.
+  const togglePlay = () => {
+    if (!isPlaying && canPlay && (playFromStart || selectedIndex >= timeline.length - 1)) {
+      onSelectIndex(0);
+    }
+    setIsPlaying((prev) => !prev);
+  };
 
   // Manual selection (drag or step click) always wins over autoplay.
   const selectManually = (index) => {
@@ -82,7 +95,7 @@ export default function TimelineSlider({
         <div className="flex items-center space-x-3">
           <button
             type="button"
-            onClick={() => setIsPlaying((prev) => !prev)}
+            onClick={togglePlay}
             disabled={!canPlay}
             aria-pressed={isPlaying}
             className={`min-w-[10.5rem] whitespace-nowrap shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${

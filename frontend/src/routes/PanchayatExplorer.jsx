@@ -264,6 +264,7 @@ export default function PanchayatExplorer() {
             title={`Forecast timeline · ${mode === 'coarse' ? `${selected.blockName} block` : selected.name}`}
             stepGridClassName="grid-cols-5"
             showStepOffsets={false}
+            playFromStart
           />
           <p className="text-xs text-slate-500">
             Percentages under each step are the rain probability (chance of at least 2.5&nbsp;mm in the 24&nbsp;h

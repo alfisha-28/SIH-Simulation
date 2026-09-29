@@ -7,7 +7,7 @@ export default function MapLegend({ variable, className = '' }) {
   const def = getHeatmapVariable(variable);
   // Units keep their own case ('mm', 'km/h'): the uppercase micro-label style
   // would turn them into 'MM' and 'KM/H'.
-  const unitMatch = def.legendTitle.match(/^(.*?)s*((.*))$/);
+  const unitMatch = def.legendTitle.match(/^(.*?)\s*\((.*)\)$/);
   const [legendName, legendUnit] = unitMatch ? [unitMatch[1], unitMatch[2]] : [def.legendTitle, null];
   return (
     <div
@@ -18,7 +18,7 @@ export default function MapLegend({ variable, className = '' }) {
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className="text-[11px] font-mono font-bold text-slate-800 uppercase tracking-wide">
           {legendName}
-          {legendUnit && <span className="normal-case"> {legendUnit}</span>}
+          {legendUnit && <span className="normal-case"> ({legendUnit})</span>}
         </span>
         <span className="text-[10px] text-slate-500">{def.legendNote}</span>
       </div>

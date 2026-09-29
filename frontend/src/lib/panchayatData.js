@@ -24,6 +24,7 @@
 //
 // ---- Exports --------------------------------------------------------------
 // Deep link: /panchayats?gp=<GP id>&t=<lead hours> opens the Panchayat Explorer on that GP.
+//   Omit t to open at +24h (the default GP's peak lead), not Now; pass t=0 for Now.
 //
 // Constants
 //   DATASET_LABEL, DATASET_NOTE         "Simulated data" chip text + a sentence for tooltips
