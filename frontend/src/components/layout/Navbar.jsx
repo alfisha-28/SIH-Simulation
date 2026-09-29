@@ -1,21 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { apiGet } from '../../lib/api';
+import { useAdvisories } from '../../lib/advisoryStore';
 
 export default function Navbar() {
   const location = useLocation();
   const navRef = useRef(null);
 
-  const [events, setEvents] = useState([]);
-  useEffect(() => {
-    apiGet('/events')
-      .then((res) => {
-        if (res?.events) {
-          setEvents(res.events);
-        }
-      })
-      .catch((err) => console.error('Navbar error fetching alerts:', err));
-  }, []);
+  // Red badge = advisories still waiting for KVK review, live from the shared
+  // workflow store, so approving one on any page updates it straight away.
+  const { counts } = useAdvisories();
+  const pendingCount = counts.pending;
 
   // Keep the active link visible when the nav scrolls horizontally on narrow screens
   useEffect(() => {
@@ -23,18 +17,12 @@ export default function Navbar() {
     activeEl?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [location.pathname]);
 
-  const severeAlertsCount = events.filter((e) => e.severity?.toLowerCase() === 'severe').length;
-
   const navItems = [
     { path: '/', label: 'Overview', end: true },
     { path: '/kvk', label: 'KVK Dashboard' },
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/events', label: 'Events Explorer', end: true },
-    {
-      path: '/alerts',
-      label: severeAlertsCount > 0 ? `Alerts [${severeAlertsCount}]` : 'Alerts',
-      hasAlert: severeAlertsCount > 0
-    },
+    { path: '/advisories', label: 'Advisories', badge: pendingCount, hasAlert: pendingCount > 0 },
     { path: '/panchayats', label: 'Panchayat Explorer' },
   ];
 
@@ -55,6 +43,9 @@ export default function Navbar() {
                 key={item.path}
                 to={item.path}
                 end={item.end}
+                // aria-label rather than an sr-only span: inside this horizontally
+                // scrolling nav an absolutely positioned span widens the whole page on phones.
+                aria-label={item.badge > 0 ? `${item.label}, ${item.badge} pending KVK review` : undefined}
                 className={({ isActive }) => {
                   let activeClass = 'bg-blue-50 text-blue-600 border border-blue-200';
                   if (item.hasAlert && isActive) {
@@ -71,6 +62,14 @@ export default function Navbar() {
                 }}
               >
                 {item.label}
+                {item.badge > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="ml-1.5 inline-flex min-w-[1.25rem] justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white tabular-nums"
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
